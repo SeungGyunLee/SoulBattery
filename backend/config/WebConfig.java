@@ -1,19 +1,29 @@
 package org.soulbattery.backend.config;
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
 @Configuration
-public class WebConfig implements WebMvcConfigurer {
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**") // 모든 경로에 대해
-                .allowedOrigins(
-                        "http://localhost:5173",          // 로컬 테스트용
-                        "https://soulbattery.vercel.app"  // 👈 실제 배포된 프론트엔드 주소 (필수!)
-                )
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // 모든 동작 허용
-                .allowCredentials(true); // 인증 정보 허용
+public class WebConfig {
+
+    @Bean
+    public CorsFilter corsFilter() {
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        CorsConfiguration config = new CorsConfiguration();
+
+        // 1. 내 프론트엔드 주소 (정확히 입력! 뒤에 / 없어야 함)
+        config.addAllowedOrigin("https://soulbattery.vercel.app");
+        config.addAllowedOrigin("http://localhost:5173");
+
+        // 2. 나머지 허용 설정 (이게 중요합니다)
+        config.setAllowCredentials(true); // 쿠키/인증 정보 허용
+        config.addAllowedHeader("*");     // 모든 헤더 허용
+        config.addAllowedMethod("*");     // GET, POST, PUT, DELETE 등 모든 동작 허용
+
+        source.registerCorsConfiguration("/**", config);
+        return new CorsFilter(source);
     }
 }
