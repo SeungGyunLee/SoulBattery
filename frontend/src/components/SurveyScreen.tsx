@@ -100,31 +100,34 @@ export default function SurveyScreen() {
   }, [result]);
 
   const handlePayment = () => {
-    if (!window.IMP) return;
-    const { IMP } = window;
+      if (!window.IMP) return;
+      const { IMP } = window;
 
-    // 👇 [보안 수정] 코드를 직접 적지 않고 .env 파일에서 가져옵니다.
-    const PORTONE_CODE = import.meta.env.VITE_PORTONE_CODE;
-    IMP.init(PORTONE_CODE);
+      // .env에서 식별코드 가져오기
+      const PORTONE_CODE = import.meta.env.VITE_PORTONE_CODE;
+      IMP.init(PORTONE_CODE);
 
-    IMP.request_pay({
-      pg: 'html5_inicis',
-      pay_method: 'card',
-      merchant_uid: `mid_${new Date().getTime()}`,
-      name: '마음 심화 처방전',
-      amount: 800,
-      buyer_email: 'test@soulbattery.com',
-      buyer_name: '테스터',
-    }, (rsp: any) => {
-      if (rsp.success) {
-        alert("결제 성공! 🔓 심화 처방전이 열립니다.");
-        setIsPaid(true);
-      } else {
-        alert("테스트 결제입니다. (성공 처리됨) 😉");
-        setIsPaid(true);
-      }
-    });
-  };
+      IMP.request_pay({
+        pg: 'html5_inicis',       // KG이니시스 (테스트 환경)
+        pay_method: 'card',       // 카드 결제
+        merchant_uid: `mid_${new Date().getTime()}`, // 주문번호
+        name: '마음 심화 처방전',   // 상품명
+        amount: 800,              // 가격
+        buyer_email: 'test@soulbattery.com',
+        buyer_name: '테스터',
+      }, (rsp: any) => {
+        // 👇 여기가 핵심! (엄격한 검사 모드)
+        if (rsp.success) {
+          // 1. 진짜 결제 성공했을 때만!
+          alert("결제 성공! 🔓 심화 처방전이 열립니다.");
+          setIsPaid(true); // 자물쇠 해제
+        } else {
+          // 2. 결제 실패하거나 취소했을 때
+          alert(`결제가 취소되었습니다.\n(사유: ${rsp.error_msg})`);
+          setIsPaid(false); // 절대 열어주지 않음!
+        }
+      });
+    };
 
   // 1️⃣ 시작 화면
   if (showIntro) {
