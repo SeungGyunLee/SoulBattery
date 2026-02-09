@@ -17,7 +17,7 @@ export default function SurveyScreen() {
     aiComment: string;
   } | null>(null);
 
-  const [freeContent, setFreeContent] = useState("");
+  // ❌ 삭제함: const [freeContent, setFreeContent] = useState("");
   const [paidContent, setPaidContent] = useState("");
   const [typedText, setTypedText] = useState("");
   const [isPaid, setIsPaid] = useState(false);
@@ -55,7 +55,7 @@ export default function SurveyScreen() {
   const submitSurvey = async (finalAnswers: number[]) => {
     setLoading(true);
     try {
-      const response = await fetch('/api/analysis/submit', {
+      const response = await fetch(import.meta.env.VITE_API_URL + '/api/analysis/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ answers: finalAnswers }),
@@ -79,7 +79,7 @@ export default function SurveyScreen() {
         ? parts[1].trim()
         : "심화 분석 내용을 불러오지 못했습니다.";
 
-      setFreeContent(publicText);
+      // ❌ 삭제함: setFreeContent(publicText);
       setPaidContent(hiddenText);
 
       let i = 0;
@@ -103,28 +103,24 @@ export default function SurveyScreen() {
       if (!window.IMP) return;
       const { IMP } = window;
 
-      // .env에서 식별코드 가져오기
       const PORTONE_CODE = import.meta.env.VITE_PORTONE_CODE;
       IMP.init(PORTONE_CODE);
 
       IMP.request_pay({
-        pg: 'html5_inicis',       // KG이니시스 (테스트 환경)
-        pay_method: 'card',       // 카드 결제
-        merchant_uid: `mid_${new Date().getTime()}`, // 주문번호
-        name: '마음 심화 처방전',   // 상품명
-        amount: 800,              // 가격
+        pg: 'html5_inicis',
+        pay_method: 'card',
+        merchant_uid: `mid_${new Date().getTime()}`,
+        name: '마음 심화 처방전',
+        amount: 800,
         buyer_email: 'test@soulbattery.com',
         buyer_name: '테스터',
       }, (rsp: any) => {
-        // 👇 여기가 핵심! (엄격한 검사 모드)
         if (rsp.success) {
-          // 1. 진짜 결제 성공했을 때만!
           alert("결제 성공! 🔓 심화 처방전이 열립니다.");
-          setIsPaid(true); // 자물쇠 해제
+          setIsPaid(true);
         } else {
-          // 2. 결제 실패하거나 취소했을 때
           alert(`결제가 취소되었습니다.\n(사유: ${rsp.error_msg})`);
-          setIsPaid(false); // 절대 열어주지 않음!
+          setIsPaid(false);
         }
       });
     };
