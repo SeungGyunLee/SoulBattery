@@ -7,6 +7,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/analysis")
+@CrossOrigin(origins = "https://soulbattery.vercel.app")
 public class AnalysisController {
 
     private final AiAnalysisService aiAnalysisService;
