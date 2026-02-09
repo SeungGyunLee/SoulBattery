@@ -1,0 +1,25 @@
+/* 구글 웹폰트 임포트 (고운돋움 - 따뜻한 손글씨 느낌) */
+@import url('https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 전체 바디에 폰트 및 배경 적용 */
+body {
+  font-family: 'Gowun Dodum', sans-serif;
+  /* 따뜻한 카페 조명 느낌의 배경색 */
+  background-color: #2c2320; 
+}
+
+/* (선택사항) 스크롤바도 카페 느낌으로 커스텀 */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #2c2320; 
+}
+::-webkit-scrollbar-thumb {
+  background: #8c7b70; 
+  border-radius: 4px;
+}
