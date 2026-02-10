@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-// 결제 관련(IMP) 코드 삭제함 (배포 에러 방지)
+// 결제 관련(IMP) 코드 삭제됨
 
 export default function SurveyScreen() {
   const [showIntro, setShowIntro] = useState(true);
@@ -13,11 +13,13 @@ export default function SurveyScreen() {
     aiComment: string;
   } | null>(null);
 
+  // ✨ 추가됨: 사용자가 생각하는 자신의 배터리 잔량
+  const [userGuess, setUserGuess] = useState(50);
+  // ✨ 추가됨: 실제 계산된 배터리 잔량
+  const [actualBattery, setActualBattery] = useState(0);
+
   const [paidContent, setPaidContent] = useState("");
   const [typedText, setTypedText] = useState("");
-
-  // ❌ 삭제함: const [isPaid, setIsPaid] = useState(false);
-  // (이 변수를 선언만 하고 안 써서 에러가 났던 겁니다!)
 
   const questions = [
     "일어났는데 몸이 천근만근이다.",
@@ -51,6 +53,20 @@ export default function SurveyScreen() {
 
   const submitSurvey = async (finalAnswers: number[]) => {
     setLoading(true);
+
+    // ✨ 배터리 잔량 계산 로직 (프론트엔드에서 처리)
+    // 15문항 * 5점 = 75점 만점 (점수가 높을수록 상태가 안 좋음 -> 배터리 낮음)
+    // 최소 점수 15점, 최대 점수 75점
+    const totalScore = finalAnswers.reduce((acc, curr) => acc + curr, 0);
+    const maxScore = questions.length * 5;
+    const minScore = questions.length * 1;
+
+    // 역산 공식: 점수가 높으면 배터리가 0에 가깝게
+    const calculatedBattery = Math.round(
+      100 - ((totalScore - minScore) / (maxScore - minScore)) * 100
+    );
+    setActualBattery(calculatedBattery);
+
     try {
       const response = await fetch(import.meta.env.VITE_API_URL + '/api/analysis/submit', {
         method: 'POST',
@@ -81,7 +97,6 @@ export default function SurveyScreen() {
       let i = 0;
       setTypedText("");
 
-      // 타이핑 속도 50ms (고주파 방지)
       const typingInterval = setInterval(() => {
         if (i < publicText.length) {
           const char = publicText.charAt(i);
@@ -96,12 +111,11 @@ export default function SurveyScreen() {
     }
   }, [result]);
 
-  // 버튼 클릭 시 실행되는 함수
   const handleLockedClick = () => {
     alert("🚧 현재 심화 처방전은 준비 중입니다.\n조금만 기다려주세요!");
   };
 
-  // 1️⃣ 시작 화면
+  // 1️⃣ 시작 화면 (슬라이더 추가됨)
   if (showIntro) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-[#FDFBF7] text-[#4A4036] p-6 fade-in">
@@ -110,12 +124,29 @@ export default function SurveyScreen() {
           <div className="mb-6 text-6xl animate-bounce">🔋</div>
           <h1 className="text-3xl font-serif font-bold text-[#5C4D41] mb-2">Soul Battery</h1>
           <p className="text-xs tracking-[0.3em] text-[#9C8F80] uppercase mb-8">Mental Energy Check</p>
-          <div className="space-y-4 font-serif text-[#6E6359] leading-relaxed text-sm mb-10">
+
+          <div className="space-y-4 font-serif text-[#6E6359] leading-relaxed text-sm mb-8">
             <p>"소울 배터리에 오신 걸 환영해요."</p>
-            <p>당신의 마음 배터리가<br/>얼마나 남았는지 확인해 드릴게요.</p>
-            <p>지금은 <span className="text-[#8B5E3C] font-bold">무료 기본 정밀 진단</span>이<br/>가능합니다.</p>
-            <p className="text-xs text-[#9C8F80] mt-4">* 편안한 마음으로 시작해 보세요 *</p>
+            <p>검사를 시작하기 전에,<br/>본인이 생각하는 마음 배터리는 몇 % 인가요?</p>
           </div>
+
+          {/* ✨ 배터리 입력 슬라이더 */}
+          <div className="mb-10 px-4">
+            <div className="flex justify-between text-xs font-bold text-[#8B5E3C] mb-2">
+              <span>0% (방전)</span>
+              <span className="text-xl">{userGuess}%</span>
+              <span>100% (완충)</span>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={userGuess}
+              onChange={(e) => setUserGuess(Number(e.target.value))}
+              className="w-full h-2 bg-[#E8E4D9] rounded-lg appearance-none cursor-pointer accent-[#8B5E3C]"
+            />
+          </div>
+
           <button onClick={() => setShowIntro(false)} className="px-10 py-4 bg-[#8B5E3C] text-white font-serif rounded-full hover:bg-[#6D4C32] transition-all shadow-md transform hover:scale-105">
             내 마음 측정하기
           </button>
@@ -135,7 +166,7 @@ export default function SurveyScreen() {
     );
   }
 
-  // 3️⃣ 결과 화면
+  // 3️⃣ 결과 화면 (배터리 비교 추가됨)
   if (result) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-[#FDFBF7] p-6 fade-in">
@@ -148,6 +179,43 @@ export default function SurveyScreen() {
               당신은 <span className="text-[#8B5E3C] underline decoration-[#D6CFC7] underline-offset-4">[{result.animal}]</span> 입니다.
             </h1>
             <p className="text-lg text-[#6E6359] mt-4 font-serif italic">"{result.description}"</p>
+          </div>
+
+          {/* ✨ 배터리 비교 섹션 (NEW) */}
+          <div className="mb-8 p-5 bg-[#FAFAF5] border border-[#E8E4D9] rounded-sm">
+             <h3 className="text-sm font-serif font-bold text-[#5C4D41] mb-4 text-center">🔋 배터리 잔량 비교</h3>
+
+             {/* 예상 수치 */}
+             <div className="mb-4">
+                <div className="flex justify-between text-xs mb-1 text-[#9C8F80]">
+                  <span>내 예상</span>
+                  <span>{userGuess}%</span>
+                </div>
+                <div className="w-full bg-[#E8E4D9] h-3 rounded-full overflow-hidden">
+                  <div className="bg-[#9C8F80] h-full" style={{ width: `${userGuess}%` }}></div>
+                </div>
+             </div>
+
+             {/* 실제 결과 */}
+             <div>
+                <div className="flex justify-between text-xs mb-1 text-[#8B5E3C] font-bold">
+                  <span>실제 진단</span>
+                  <span>{actualBattery}%</span>
+                </div>
+                <div className="w-full bg-[#E8E4D9] h-3 rounded-full overflow-hidden">
+                   {/* 배터리가 낮을수록 빨간색, 높을수록 초록색 느낌 */}
+                  <div
+                    className={`h-full transition-all duration-1000 ${actualBattery < 30 ? 'bg-red-400' : actualBattery < 70 ? 'bg-[#8B5E3C]' : 'bg-green-600'}`}
+                    style={{ width: `${actualBattery}%` }}>
+                  </div>
+                </div>
+             </div>
+
+             <p className="text-center text-xs text-[#9C8F80] mt-4 font-serif">
+               {Math.abs(userGuess - actualBattery) > 20
+                 ? "생각하신 것과 실제 마음의 상태가 많이 다르네요. 😢"
+                 : "자신의 상태를 아주 잘 파악하고 계시네요! 👍"}
+             </p>
           </div>
 
           {/* 1. 기본 처방전 */}
@@ -163,7 +231,6 @@ export default function SurveyScreen() {
 
           {/* 2. 심화 처방전 (블러 & 잠금) */}
           <div className={`relative overflow-hidden rounded-sm border border-[#E8E4D9] transition-colors duration-500 bg-gray-50`}>
-            {/* 블러된 텍스트 */}
             <div className={`p-6 filter blur-[5px] opacity-60 select-none`}>
                <h3 className="text-md font-serif font-bold text-[#8B5E3C] mb-4">💊 심화 솔루션</h3>
                <p className="text-[#5C4D41] leading-loose font-serif whitespace-pre-wrap text-sm">
@@ -171,7 +238,6 @@ export default function SurveyScreen() {
                </p>
             </div>
 
-            {/* 잠금 오버레이 */}
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/40 backdrop-blur-[1px]">
                 <div className="text-2xl mb-2">🔒</div>
                 <p className="text-[#5C4D41] font-serif mb-4 text-sm font-bold opacity-80">심화 솔루션 (준비 중)</p>
