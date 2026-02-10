@@ -127,7 +127,7 @@ export default function SurveyScreen() {
 
           <div className="space-y-4 font-serif text-[#6E6359] leading-relaxed text-sm mb-8">
             <p>"소울 배터리에 오신 걸 환영해요."</p>
-            <p>검사를 시작하기 전에,<br/>본인이 생각하는 마음 배터리는 몇 % 인가요?</p>
+            <p>검사를 시작하기 전에,<br/>본인이 생각하는 마음 배터리 잔량은 몇 % 인가요?</p>
           </div>
 
           {/* ✨ 배터리 입력 슬라이더 */}
