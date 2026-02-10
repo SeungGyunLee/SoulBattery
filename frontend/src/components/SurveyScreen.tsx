@@ -52,7 +52,7 @@ export default function SurveyScreen() {
       window.Kakao.Share.sendDefault({
         objectType: 'feed', // 카드 형태
         content: {
-          title: `🔋 내 마음 배터리는 ${actualBattery}% 래요!`,
+          title: `🔋 내 마음 배터리 잔량은 ${actualBattery}% 래요!`,
           description: `당신은 [${result?.animal}] 유형입니다.\n지금 무료로 정밀 진단을 받아보세요.`,
           // 👇 여기가 수정된 부분입니다! (imageUrl 한 번만 쓰고, 뒤에 ?v=2 추가)
           imageUrl: 'https://soulbattery.vercel.app/sb-icon.png?v=2',
@@ -63,7 +63,7 @@ export default function SurveyScreen() {
         },
         buttons: [
           {
-            title: '나의 배터리 확인하기 ⚡',
+            title: '나의 배터리 확인하기 🔋',
             link: {
               mobileWebUrl: 'https://soulbattery.vercel.app',
               webUrl: 'https://soulbattery.vercel.app',
