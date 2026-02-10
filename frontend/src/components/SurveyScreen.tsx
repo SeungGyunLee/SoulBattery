@@ -35,41 +35,30 @@ export default function SurveyScreen() {
     }
   }, []);
 
-  // ✨ 클릭하면 우리 사이트로 납치해오는 완벽한 공유 함수
+  // ✨ [버튼 삭제] 본문에 링크를 넣는 가장 확실한 방법
     const shareToKakao = () => {
-      // 1. 카카오 SDK 로드 체크
-      if (!window.Kakao) {
-        alert("카카오톡 로딩 중입니다. 잠시 후 다시 시도해 주세요.");
-        return;
-      }
+      if (!window.Kakao) return;
 
-      // 2. 초기화 체크 (안 되어 있으면 강제 초기화)
       if (!window.Kakao.isInitialized()) {
         window.Kakao.init("53235fabc43d49b0e066e57017d8c3b6");
       }
 
-      // 3. 공유 메시지 보내기
+      const SHARE_URL = "https://soulbattery.vercel.app";
+
       window.Kakao.Share.sendDefault({
-        objectType: 'feed', // 카드 형태
+        objectType: 'feed',
         content: {
-          title: `🔋 내 마음 배터리 잔량은 ${actualBattery}% 래요!`,
-          description: `당신은 [${result?.animal}] 유형입니다.\n지금 무료로 정밀 진단을 받아보세요.`,
-          // 👇 여기가 수정된 부분입니다! (imageUrl 한 번만 쓰고, 뒤에 ?v=2 추가)
-          imageUrl: 'https://soulbattery.vercel.app/sb-icon.png?v=2',
+          title: `🔋 내 마음 배터리: ${actualBattery}%`,
+          // 👇 설명글 안에 URL을 직접 넣어서 눈에 보이게 만듦
+          description: `나는 [${result?.animal}] 유형입니다.\n\n👇 아래 링크를 눌러 진단받기\n${SHARE_URL}`,
+          imageUrl: `${SHARE_URL}/sb-icon.png?v=5`,
           link: {
-            mobileWebUrl: 'https://soulbattery.vercel.app',
-            webUrl: 'https://soulbattery.vercel.app',
+            // 👇 이미지나 제목을 눌러도 이동하게 설정 (이건 잘 작동함)
+            mobileWebUrl: SHARE_URL,
+            webUrl: SHARE_URL,
           },
         },
-        buttons: [
-          {
-            title: '나의 배터리 확인하기 🔋',
-            link: {
-              mobileWebUrl: 'https://soulbattery.vercel.app',
-              webUrl: 'https://soulbattery.vercel.app',
-            },
-          },
-        ],
+        // ❌ 버튼(buttons) 부분은 싹 지웠습니다. 이제 골치 아픈 일 없습니다!
       });
     };
 
