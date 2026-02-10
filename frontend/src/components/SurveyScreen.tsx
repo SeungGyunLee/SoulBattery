@@ -35,35 +35,37 @@ export default function SurveyScreen() {
     }
   }, []);
 
-  // ✨ [테스트] 설명 줄이고, 버튼 자리 강제로 만드는 코드
+  // ✨ [최종 완성] 레이아웃 고정 + 버튼 부활 코드
     const shareToKakao = () => {
+      // 1. 카카오 SDK 로드 체크
       if (!window.Kakao) return;
 
+      // 2. 초기화 체크
       if (!window.Kakao.isInitialized()) {
         window.Kakao.init("53235fabc43d49b0e066e57017d8c3b6");
       }
 
       const DOMAIN = "https://soulbattery.vercel.app";
 
+      // 3. 공유 메시지 보내기
       window.Kakao.Share.sendDefault({
         objectType: 'feed',
         content: {
-          // 👇 제목도 한 줄로 깔끔하게!
-          title: `🔋 내 배터리: ${actualBattery}%`,
-          // 👇 [핵심] 설명을 아주 짧게 줄여서 '...'이 안 생기게 해봅시다.
-          description: `#${result?.animal} #소울배터리 #무료진단`,
-          imageUrl: `${DOMAIN}/sb-icon.png?v=5`,
+          title: `🔋 내 마음 배터리: ${actualBattery}%`,
+          description: `나는 [${result?.animal}] 유형입니다.\n친구들도 내 배터리를 확인해보세요!`,
+          imageUrl: `${DOMAIN}/sb-icon.png?v=7`, // 이미지 버전 살짝 변경
           link: {
             mobileWebUrl: DOMAIN,
             webUrl: DOMAIN,
           },
         },
-        // 👇 [비장의 무기] 이걸 넣으면 하단 레이아웃이 강제로 잡힙니다!
+        // 👇 레이아웃 고정용 (유지)
         social: {
           likeCount: 286,
           commentCount: 45,
           sharedCount: 845,
         },
+        // 👇 [버튼 부활!] 이제 도메인이 완벽해서 무조건 나옵니다.
         buttons: [
           {
             title: '결과 확인하기 🚀',
