@@ -1,6 +1,11 @@
 import { useState, useEffect } from 'react';
 
-// 결제 관련(IMP) 코드 삭제됨
+// 카카오 SDK 타입 정의 (TS 에러 방지)
+declare global {
+  interface Window {
+    Kakao: any;
+  }
+}
 
 export default function SurveyScreen() {
   const [showIntro, setShowIntro] = useState(true);
@@ -13,13 +18,58 @@ export default function SurveyScreen() {
     aiComment: string;
   } | null>(null);
 
-  // ✨ 추가됨: 사용자가 생각하는 자신의 배터리 잔량
+  // 사용자가 생각하는 배터리 & 실제 배터리
   const [userGuess, setUserGuess] = useState(50);
-  // ✨ 추가됨: 실제 계산된 배터리 잔량
   const [actualBattery, setActualBattery] = useState(0);
 
   const [paidContent, setPaidContent] = useState("");
   const [typedText, setTypedText] = useState("");
+
+  // ✨ 1. 카카오톡 초기화 (키 적용됨)
+  useEffect(() => {
+    const KAKAO_KEY = "53235fabc43d49b0e066e57017d8c3b6";
+
+    if (window.Kakao && !window.Kakao.isInitialized()) {
+      window.Kakao.init(KAKAO_KEY);
+      console.log("Kakao Initialized");
+    }
+  }, []);
+
+  // ✨ 2. 카카오톡 공유 함수
+  const shareToKakao = () => {
+    if (!window.Kakao) return;
+
+    window.Kakao.Share.sendDefault({
+      objectType: 'feed',
+      content: {
+        title: `내 마음 배터리는 ${actualBattery}% 래요! 🔋`,
+        description: `당신은 [${result?.animal}] 유형입니다.\n지금 무료로 정밀 진단을 받아보세요.`,
+        imageUrl:
+          'https://images.unsplash.com/photo-1490730141103-6cac27aaab94?q=80&w=1200&auto=format&fit=crop', // 썸네일
+        link: {
+          mobileWebUrl: 'https://soulbattery.vercel.app',
+          webUrl: 'https://soulbattery.vercel.app',
+        },
+      },
+      buttons: [
+        {
+          title: '결과 확인하기',
+          link: {
+            mobileWebUrl: 'https://soulbattery.vercel.app',
+            webUrl: 'https://soulbattery.vercel.app',
+          },
+        },
+      ],
+    });
+  };
+
+  // ✨ 3. 링크 복사 함수 (인스타용)
+  const copyLink = () => {
+    const url = 'https://soulbattery.vercel.app';
+    navigator.clipboard.writeText(url).then(() => {
+      alert("링크가 복사되었습니다! 📋\n인스타그램 스토리에 붙여넣어 공유해보세요.");
+    });
+  };
 
   const questions = [
     "일어났는데 몸이 천근만근이다.",
@@ -54,14 +104,11 @@ export default function SurveyScreen() {
   const submitSurvey = async (finalAnswers: number[]) => {
     setLoading(true);
 
-    // ✨ 배터리 잔량 계산 로직 (프론트엔드에서 처리)
-    // 15문항 * 5점 = 75점 만점 (점수가 높을수록 상태가 안 좋음 -> 배터리 낮음)
-    // 최소 점수 15점, 최대 점수 75점
+    // 배터리 계산 로직
     const totalScore = finalAnswers.reduce((acc, curr) => acc + curr, 0);
     const maxScore = questions.length * 5;
     const minScore = questions.length * 1;
 
-    // 역산 공식: 점수가 높으면 배터리가 0에 가깝게
     const calculatedBattery = Math.round(
       100 - ((totalScore - minScore) / (maxScore - minScore)) * 100
     );
@@ -115,7 +162,7 @@ export default function SurveyScreen() {
     alert("🚧 현재 심화 처방전은 준비 중입니다.\n조금만 기다려주세요!");
   };
 
-  // 1️⃣ 시작 화면 (슬라이더 추가됨)
+  // 1️⃣ 시작 화면
   if (showIntro) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-[#FDFBF7] text-[#4A4036] p-6 fade-in">
@@ -130,7 +177,6 @@ export default function SurveyScreen() {
             <p>검사를 시작하기 전에,<br/>본인이 생각하는 마음 배터리 잔량은 몇 % 인가요?</p>
           </div>
 
-          {/* ✨ 배터리 입력 슬라이더 */}
           <div className="mb-10 px-4">
             <div className="flex justify-between text-xs font-bold text-[#8B5E3C] mb-2">
               <span>0% (방전)</span>
@@ -166,13 +212,12 @@ export default function SurveyScreen() {
     );
   }
 
-  // 3️⃣ 결과 화면 (배터리 비교 추가됨)
+  // 3️⃣ 결과 화면
   if (result) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-[#FDFBF7] p-6 fade-in">
         <div className="max-w-2xl w-full bg-white p-8 shadow-xl border border-[#E8E4D9] relative">
 
-          {/* 동물 결과 */}
           <div className="text-center mb-8 border-b-2 border-dashed border-[#D6CFC7] pb-6">
             <span className="text-xs font-serif text-[#9C8F80] tracking-[0.2em] uppercase">Diagnosis Result</span>
             <h1 className="text-3xl font-serif font-bold mt-3 text-[#5C4D41]">
@@ -181,7 +226,7 @@ export default function SurveyScreen() {
             <p className="text-lg text-[#6E6359] mt-4 font-serif italic">"{result.description}"</p>
           </div>
 
-          {/* ✨ 배터리 비교 섹션 (NEW) */}
+          {/* 배터리 비교 섹션 */}
           <div className="mb-8 p-5 bg-[#FAFAF5] border border-[#E8E4D9] rounded-sm">
              <h3 className="text-sm font-serif font-bold text-[#5C4D41] mb-4 text-center">🔋 배터리 잔량 비교</h3>
 
@@ -203,7 +248,6 @@ export default function SurveyScreen() {
                   <span>{actualBattery}%</span>
                 </div>
                 <div className="w-full bg-[#E8E4D9] h-3 rounded-full overflow-hidden">
-                   {/* 배터리가 낮을수록 빨간색, 높을수록 초록색 느낌 */}
                   <div
                     className={`h-full transition-all duration-1000 ${actualBattery < 30 ? 'bg-red-400' : actualBattery < 70 ? 'bg-[#8B5E3C]' : 'bg-green-600'}`}
                     style={{ width: `${actualBattery}%` }}>
@@ -218,7 +262,6 @@ export default function SurveyScreen() {
              </p>
           </div>
 
-          {/* 1. 기본 처방전 */}
           <div className="bg-[#FAFAF5] p-6 rounded-sm border border-[#E8E4D9] mb-6 shadow-sm">
             <h3 className="text-md font-serif font-bold text-[#8B5E3C] mb-4 flex items-center">
               <span className="mr-2 text-xl">📋</span> 마음 정밀 진단
@@ -229,8 +272,7 @@ export default function SurveyScreen() {
             </p>
           </div>
 
-          {/* 2. 심화 처방전 (블러 & 잠금) */}
-          <div className={`relative overflow-hidden rounded-sm border border-[#E8E4D9] transition-colors duration-500 bg-gray-50`}>
+          <div className={`relative overflow-hidden rounded-sm border border-[#E8E4D9] transition-colors duration-500 bg-gray-50 mb-8`}>
             <div className={`p-6 filter blur-[5px] opacity-60 select-none`}>
                <h3 className="text-md font-serif font-bold text-[#8B5E3C] mb-4">💊 심화 솔루션</h3>
                <p className="text-[#5C4D41] leading-loose font-serif whitespace-pre-wrap text-sm">
@@ -250,7 +292,26 @@ export default function SurveyScreen() {
             </div>
           </div>
 
-          <button onClick={() => window.location.reload()} className="w-full mt-10 text-[#9C8F80] text-sm font-serif underline hover:text-[#8B5E3C] transition-colors">
+          {/* ✨ 공유 버튼 섹션 (추가됨) */}
+          <div className="flex gap-2 justify-center w-full mb-10">
+            {/* 카카오톡 공유 버튼 */}
+            <button
+              onClick={shareToKakao}
+              className="flex-1 bg-[#FEE500] text-[#000000] py-3 rounded-lg font-bold shadow-md hover:bg-[#FDD835] transition-colors flex items-center justify-center gap-2"
+            >
+              💬 카카오톡 공유
+            </button>
+
+            {/* 링크 복사 버튼 */}
+            <button
+              onClick={copyLink}
+              className="flex-1 bg-[#E8E4D9] text-[#5C4D41] py-3 rounded-lg font-bold shadow-md hover:bg-[#D6CFC7] transition-colors flex items-center justify-center gap-2"
+            >
+              🔗 링크 복사 (Insta)
+            </button>
+          </div>
+
+          <button onClick={() => window.location.reload()} className="w-full text-[#9C8F80] text-sm font-serif underline hover:text-[#8B5E3C] transition-colors">
             처음으로 돌아가기
           </button>
         </div>
