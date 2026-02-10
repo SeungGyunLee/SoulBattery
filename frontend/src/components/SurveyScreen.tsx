@@ -44,7 +44,7 @@ export default function SurveyScreen() {
       }
 
       // 👇 여기에 아까 복사한 템플릿 ID 숫자를 넣으세요!
-      const TEMPLATE_ID = 123456;
+      const TEMPLATE_ID = 129303;
 
       window.Kakao.Share.sendCustom({
         templateId: TEMPLATE_ID,
