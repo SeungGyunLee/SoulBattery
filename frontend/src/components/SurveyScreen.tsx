@@ -55,7 +55,7 @@ export default function SurveyScreen() {
           title: `🔋 내 마음 배터리는 ${actualBattery}% 래요!`,
           description: `당신은 [${result?.animal}] 유형입니다.\n지금 무료로 정밀 진단을 받아보세요.`,
           imageUrl:
-            'https://images.unsplash.com/photo-1490730141103-6cac27aaab94?q=80&w=1200&auto=format&fit=crop', // 썸네일 이미지
+            imageUrl: 'https://soulbattery.vercel.app/sb-icon.png', // 썸네일 이미지
           link: {
             // 👇 이미지나 제목을 눌렀을 때 이동할 주소 (필수!)
             mobileWebUrl: 'https://soulbattery.vercel.app',
