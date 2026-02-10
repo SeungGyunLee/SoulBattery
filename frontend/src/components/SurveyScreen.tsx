@@ -35,33 +35,25 @@ export default function SurveyScreen() {
     }
   }, []);
 
-  const shareToKakao = () => {
+  // ✨ [최종 해결책] 템플릿 ID를 사용하는 무적의 공유 함수
+    const shareToKakao = () => {
       if (!window.Kakao) return;
 
       if (!window.Kakao.isInitialized()) {
         window.Kakao.init("53235fabc43d49b0e066e57017d8c3b6");
       }
 
-      const DOMAIN = "https://soulbattery.vercel.app";
+      // 👇 여기에 아까 복사한 템플릿 ID 숫자를 넣으세요!
+      const TEMPLATE_ID = 123456;
 
-      window.Kakao.Share.sendDefault({
-        objectType: 'feed',
-        content: {
-          title: `🔋 내 마음 배터리: ${actualBattery}%`,
-          // 👇 [핵심] 텍스트로 링크를 못 거니, 행동을 유도합니다!
-          description: `나는 [${result?.animal}] 유형입니다.\n👇 이미지를 누르면 페이지로 이동해요!`,
-          imageUrl: `${DOMAIN}/sb-icon.png?v=7`,
-          link: {
-            mobileWebUrl: DOMAIN,
-            webUrl: DOMAIN,
-          },
+      window.Kakao.Share.sendCustom({
+        templateId: TEMPLATE_ID,
+        templateArgs: {
+          // 템플릿에 구멍 뚫어놓은 변수(${...})를 여기서 채워줍니다.
+          'TITLE': `🔋 내 마음 배터리: ${actualBattery}%`,
+          'DESC': `나는 [${result?.animal}] 유형입니다.\n친구들도 내 배터리를 확인해보세요!`,
+          'IMAGE': 'https://soulbattery.vercel.app/sb-icon.png?v=8'
         },
-        social: {
-          likeCount: 286,
-          commentCount: 45,
-          sharedCount: 845,
-        },
-        // 버튼 설정은 과감하게 삭제! (이미지가 버튼 역할을 합니다)
       });
     };
 
