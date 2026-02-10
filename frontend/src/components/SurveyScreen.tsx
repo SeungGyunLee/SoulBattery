@@ -35,46 +35,33 @@ export default function SurveyScreen() {
     }
   }, []);
 
-  // ✨ [최종 완성] 레이아웃 고정 + 버튼 부활 코드
-    const shareToKakao = () => {
-      // 1. 카카오 SDK 로드 체크
+  const shareToKakao = () => {
       if (!window.Kakao) return;
 
-      // 2. 초기화 체크
       if (!window.Kakao.isInitialized()) {
         window.Kakao.init("53235fabc43d49b0e066e57017d8c3b6");
       }
 
       const DOMAIN = "https://soulbattery.vercel.app";
 
-      // 3. 공유 메시지 보내기
       window.Kakao.Share.sendDefault({
         objectType: 'feed',
         content: {
           title: `🔋 내 마음 배터리: ${actualBattery}%`,
-          description: `나는 [${result?.animal}] 유형입니다.\n친구들도 내 배터리를 확인해보세요!`,
-          imageUrl: `${DOMAIN}/sb-icon.png?v=7`, // 이미지 버전 살짝 변경
+          // 👇 [핵심] 텍스트로 링크를 못 거니, 행동을 유도합니다!
+          description: `나는 [${result?.animal}] 유형입니다.\n👇 이미지를 누르면 페이지로 이동해요!`,
+          imageUrl: `${DOMAIN}/sb-icon.png?v=7`,
           link: {
             mobileWebUrl: DOMAIN,
             webUrl: DOMAIN,
           },
         },
-        // 👇 레이아웃 고정용 (유지)
         social: {
           likeCount: 286,
           commentCount: 45,
           sharedCount: 845,
         },
-        // 👇 [버튼 부활!] 이제 도메인이 완벽해서 무조건 나옵니다.
-        buttons: [
-          {
-            title: '결과 확인하기 🚀',
-            link: {
-              mobileWebUrl: DOMAIN,
-              webUrl: DOMAIN,
-            },
-          },
-        ],
+        // 버튼 설정은 과감하게 삭제! (이미지가 버튼 역할을 합니다)
       });
     };
 
