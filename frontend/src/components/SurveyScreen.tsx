@@ -63,7 +63,7 @@ export default function SurveyScreen() {
         },
         buttons: [
           {
-            title: '내 배터리 확인하기 ⚡',
+            title: '나의 배터리 확인하기 ⚡',
             link: {
               mobileWebUrl: 'https://soulbattery.vercel.app',
               webUrl: 'https://soulbattery.vercel.app',
