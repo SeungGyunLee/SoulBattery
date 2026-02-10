@@ -35,33 +35,45 @@ export default function SurveyScreen() {
     }
   }, []);
 
-  // ✨ 2. 카카오톡 공유 함수
-  const shareToKakao = () => {
-    if (!window.Kakao) return;
+  // ✨ 클릭하면 우리 사이트로 납치해오는 완벽한 공유 함수
+    const shareToKakao = () => {
+      // 1. 카카오 SDK 로드 체크
+      if (!window.Kakao) {
+        alert("카카오톡 로딩 중입니다. 잠시 후 다시 시도해 주세요.");
+        return;
+      }
 
-    window.Kakao.Share.sendDefault({
-      objectType: 'feed',
-      content: {
-        title: `내 마음 배터리는 ${actualBattery}% 래요! 🔋`,
-        description: `당신은 [${result?.animal}] 유형입니다.\n지금 무료로 정밀 진단을 받아보세요.`,
-        imageUrl:
-          'https://images.unsplash.com/photo-1490730141103-6cac27aaab94?q=80&w=1200&auto=format&fit=crop', // 썸네일
-        link: {
-          mobileWebUrl: 'https://soulbattery.vercel.app',
-          webUrl: 'https://soulbattery.vercel.app',
-        },
-      },
-      buttons: [
-        {
-          title: '결과 확인하기',
+      // 2. 초기화 체크 (안 되어 있으면 강제 초기화)
+      if (!window.Kakao.isInitialized()) {
+        window.Kakao.init("53235fabc43d49b0e066e57017d8c3b6");
+      }
+
+      // 3. 공유 메시지 보내기
+      window.Kakao.Share.sendDefault({
+        objectType: 'feed', // 카드 형태
+        content: {
+          title: `🔋 내 마음 배터리는 ${actualBattery}% 래요!`,
+          description: `당신은 [${result?.animal}] 유형입니다.\n지금 무료로 정밀 진단을 받아보세요.`,
+          imageUrl:
+            'https://images.unsplash.com/photo-1490730141103-6cac27aaab94?q=80&w=1200&auto=format&fit=crop', // 썸네일 이미지
           link: {
+            // 👇 이미지나 제목을 눌렀을 때 이동할 주소 (필수!)
             mobileWebUrl: 'https://soulbattery.vercel.app',
             webUrl: 'https://soulbattery.vercel.app',
           },
         },
-      ],
-    });
-  };
+        buttons: [
+          {
+            title: '내 배터리 확인하기 ⚡', // 버튼 이름
+            link: {
+              // 👇 버튼을 눌렀을 때 이동할 주소 (필수!)
+              mobileWebUrl: 'https://soulbattery.vercel.app',
+              webUrl: 'https://soulbattery.vercel.app',
+            },
+          },
+        ],
+      });
+    };
 
   // ✨ 3. 링크 복사 함수 (인스타용)
   const copyLink = () => {
