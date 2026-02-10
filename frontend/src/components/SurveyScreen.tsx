@@ -35,7 +35,7 @@ export default function SurveyScreen() {
     }
   }, []);
 
-  // ✨ [버튼 삭제] 본문에 링크를 넣는 가장 확실한 방법
+  // ✨ [테스트] 설명 줄이고, 버튼 자리 강제로 만드는 코드
     const shareToKakao = () => {
       if (!window.Kakao) return;
 
@@ -43,22 +43,36 @@ export default function SurveyScreen() {
         window.Kakao.init("53235fabc43d49b0e066e57017d8c3b6");
       }
 
-      const SHARE_URL = "https://soulbattery.vercel.app";
+      const DOMAIN = "https://soulbattery.vercel.app";
 
       window.Kakao.Share.sendDefault({
         objectType: 'feed',
         content: {
-          title: `🔋 내 마음 배터리: ${actualBattery}%`,
-          // 👇 설명글 안에 URL을 직접 넣어서 눈에 보이게 만듦
-          description: `나는 [${result?.animal}] 유형입니다.\n\n👇 아래 링크를 눌러 진단받기\n${SHARE_URL}`,
-          imageUrl: `${SHARE_URL}/sb-icon.png?v=5`,
+          // 👇 제목도 한 줄로 깔끔하게!
+          title: `🔋 내 배터리: ${actualBattery}%`,
+          // 👇 [핵심] 설명을 아주 짧게 줄여서 '...'이 안 생기게 해봅시다.
+          description: `#${result?.animal} #소울배터리 #무료진단`,
+          imageUrl: `${DOMAIN}/sb-icon.png?v=5`,
           link: {
-            // 👇 이미지나 제목을 눌러도 이동하게 설정 (이건 잘 작동함)
-            mobileWebUrl: SHARE_URL,
-            webUrl: SHARE_URL,
+            mobileWebUrl: DOMAIN,
+            webUrl: DOMAIN,
           },
         },
-        // ❌ 버튼(buttons) 부분은 싹 지웠습니다. 이제 골치 아픈 일 없습니다!
+        // 👇 [비장의 무기] 이걸 넣으면 하단 레이아웃이 강제로 잡힙니다!
+        social: {
+          likeCount: 286,
+          commentCount: 45,
+          sharedCount: 845,
+        },
+        buttons: [
+          {
+            title: '결과 확인하기 🚀',
+            link: {
+              mobileWebUrl: DOMAIN,
+              webUrl: DOMAIN,
+            },
+          },
+        ],
       });
     };
 
