@@ -1,11 +1,6 @@
 import { useState, useEffect } from 'react';
 
-// Window 인터페이스는 결제 나중에 붙일 때를 대비해 남겨둠
-declare global {
-  interface Window {
-    IMP: any;
-  }
-}
+// 결제 관련(IMP) 코드 삭제함 (배포 에러 방지)
 
 export default function SurveyScreen() {
   const [showIntro, setShowIntro] = useState(true);
@@ -20,7 +15,9 @@ export default function SurveyScreen() {
 
   const [paidContent, setPaidContent] = useState("");
   const [typedText, setTypedText] = useState("");
-  const [isPaid, setIsPaid] = useState(false); // 결제 상태 (지금은 항상 false)
+
+  // ❌ 삭제함: const [isPaid, setIsPaid] = useState(false);
+  // (이 변수를 선언만 하고 안 써서 에러가 났던 겁니다!)
 
   const questions = [
     "일어났는데 몸이 천근만근이다.",
@@ -99,9 +96,9 @@ export default function SurveyScreen() {
     }
   }, [result]);
 
-  // 버튼 클릭 시 실행되는 함수 (결제 대신 안내 메시지)
+  // 버튼 클릭 시 실행되는 함수
   const handleLockedClick = () => {
-    alert("🚧 현재 심화 처방전은 현재 준비 중입니다.\n조금만 기다려주세요! (무료 처방전은 상단에서 확인 가능합니다)");
+    alert("🚧 현재 심화 처방전은 준비 중입니다.\n조금만 기다려주세요! (무료 처방전은 상단에서 확인 가능합니다)");
   };
 
   // 1️⃣ 시작 화면
@@ -116,6 +113,7 @@ export default function SurveyScreen() {
           <div className="space-y-4 font-serif text-[#6E6359] leading-relaxed text-sm mb-10">
             <p>"소울 배터리에 오신 걸 환영해요."</p>
             <p>당신의 마음 배터리가<br/>얼마나 남았는지 확인해 드릴게요.</p>
+            <p>지금은 <span className="text-[#8B5E3C] font-bold">무료 기본 정밀 진단</span>이<br/>가능합니다.</p>
             <p className="text-xs text-[#9C8F80] mt-4">* 편안한 마음으로 시작해 보세요 *</p>
           </div>
           <button onClick={() => setShowIntro(false)} className="px-10 py-4 bg-[#8B5E3C] text-white font-serif rounded-full hover:bg-[#6D4C32] transition-all shadow-md transform hover:scale-105">
@@ -152,7 +150,7 @@ export default function SurveyScreen() {
             <p className="text-lg text-[#6E6359] mt-4 font-serif italic">"{result.description}"</p>
           </div>
 
-          {/* 1. 기본 처방전 (분량 늘어난 부분) */}
+          {/* 1. 기본 처방전 */}
           <div className="bg-[#FAFAF5] p-6 rounded-sm border border-[#E8E4D9] mb-6 shadow-sm">
             <h3 className="text-md font-serif font-bold text-[#8B5E3C] mb-4 flex items-center">
               <span className="mr-2 text-xl">📋</span> 마음 정밀 진단 (무료)
@@ -163,7 +161,7 @@ export default function SurveyScreen() {
             </p>
           </div>
 
-          {/* 2. 심화 처방전 (블러 처리 & 잠김) */}
+          {/* 2. 심화 처방전 (블러 & 잠금) */}
           <div className={`relative overflow-hidden rounded-sm border border-[#E8E4D9] transition-colors duration-500 bg-gray-50`}>
             {/* 블러된 텍스트 */}
             <div className={`p-6 filter blur-[5px] opacity-60 select-none`}>
