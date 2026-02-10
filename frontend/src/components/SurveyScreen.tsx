@@ -98,7 +98,7 @@ export default function SurveyScreen() {
 
   // 버튼 클릭 시 실행되는 함수
   const handleLockedClick = () => {
-    alert("🚧 현재 심화 처방전은 준비 중입니다.\n조금만 기다려주세요! (무료 처방전은 상단에서 확인 가능합니다)");
+    alert("🚧 현재 심화 처방전은 준비 중입니다.\n조금만 기다려주세요!");
   };
 
   // 1️⃣ 시작 화면
@@ -153,7 +153,7 @@ export default function SurveyScreen() {
           {/* 1. 기본 처방전 */}
           <div className="bg-[#FAFAF5] p-6 rounded-sm border border-[#E8E4D9] mb-6 shadow-sm">
             <h3 className="text-md font-serif font-bold text-[#8B5E3C] mb-4 flex items-center">
-              <span className="mr-2 text-xl">📋</span> 마음 정밀 진단 (무료)
+              <span className="mr-2 text-xl">📋</span> 마음 정밀 진단
             </h3>
             <p className="text-[#5C4D41] leading-loose font-serif whitespace-pre-wrap text-md">
               {typedText}
