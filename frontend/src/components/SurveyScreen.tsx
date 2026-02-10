@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 
+// Window 인터페이스는 결제 나중에 붙일 때를 대비해 남겨둠
 declare global {
   interface Window {
     IMP: any;
@@ -17,10 +18,9 @@ export default function SurveyScreen() {
     aiComment: string;
   } | null>(null);
 
-  // ❌ 삭제함: const [freeContent, setFreeContent] = useState("");
   const [paidContent, setPaidContent] = useState("");
   const [typedText, setTypedText] = useState("");
-  const [isPaid, setIsPaid] = useState(false);
+  const [isPaid, setIsPaid] = useState(false); // 결제 상태 (지금은 항상 false)
 
   const questions = [
     "일어났는데 몸이 천근만근이다.",
@@ -79,12 +79,12 @@ export default function SurveyScreen() {
         ? parts[1].trim()
         : "심화 분석 내용을 불러오지 못했습니다.";
 
-      // ❌ 삭제함: setFreeContent(publicText);
       setPaidContent(hiddenText);
 
       let i = 0;
       setTypedText("");
 
+      // 타이핑 속도 50ms (고주파 방지)
       const typingInterval = setInterval(() => {
         if (i < publicText.length) {
           const char = publicText.charAt(i);
@@ -93,37 +93,16 @@ export default function SurveyScreen() {
         } else {
           clearInterval(typingInterval);
         }
-      }, 30);
+      }, 50);
 
       return () => clearInterval(typingInterval);
     }
   }, [result]);
 
-  const handlePayment = () => {
-      if (!window.IMP) return;
-      const { IMP } = window;
-
-      const PORTONE_CODE = import.meta.env.VITE_PORTONE_CODE;
-      IMP.init(PORTONE_CODE);
-
-      IMP.request_pay({
-        pg: 'html5_inicis',
-        pay_method: 'card',
-        merchant_uid: `mid_${new Date().getTime()}`,
-        name: '마음 심화 처방전',
-        amount: 800,
-        buyer_email: 'test@soulbattery.com',
-        buyer_name: '테스터',
-      }, (rsp: any) => {
-        if (rsp.success) {
-          alert("결제 성공! 🔓 심화 처방전이 열립니다.");
-          setIsPaid(true);
-        } else {
-          alert(`결제가 취소되었습니다.\n(사유: ${rsp.error_msg})`);
-          setIsPaid(false);
-        }
-      });
-    };
+  // 버튼 클릭 시 실행되는 함수 (결제 대신 안내 메시지)
+  const handleLockedClick = () => {
+    alert("🚧 현재 심화 처방전은 현재 준비 중입니다.\n조금만 기다려주세요! (무료 처방전은 상단에서 확인 가능합니다)");
+  };
 
   // 1️⃣ 시작 화면
   if (showIntro) {
@@ -137,7 +116,6 @@ export default function SurveyScreen() {
           <div className="space-y-4 font-serif text-[#6E6359] leading-relaxed text-sm mb-10">
             <p>"소울 배터리에 오신 걸 환영해요."</p>
             <p>당신의 마음 배터리가<br/>얼마나 남았는지 확인해 드릴게요.</p>
-            <p>솔직하게 답해주시면,<br/>당신만을 위한 <span className="text-[#8B5E3C] font-bold">마음 처방전</span>을 드립니다.</p>
             <p className="text-xs text-[#9C8F80] mt-4">* 편안한 마음으로 시작해 보세요 *</p>
           </div>
           <button onClick={() => setShowIntro(false)} className="px-10 py-4 bg-[#8B5E3C] text-white font-serif rounded-full hover:bg-[#6D4C32] transition-all shadow-md transform hover:scale-105">
@@ -154,7 +132,7 @@ export default function SurveyScreen() {
       <div className="flex flex-col items-center justify-center h-screen bg-[#FDFBF7] text-[#4A4036] fade-in">
         <div className="animate-bounce text-4xl mb-4">☕</div>
         <h2 className="text-xl font-serif tracking-widest text-[#8C7B6C]">진단서 작성 중...</h2>
-        <p className="text-sm mt-2 text-[#B0A396] font-serif">당신의 마음 온도를 기록하고 있어요.</p>
+        <p className="text-sm mt-2 text-[#B0A396] font-serif">당신의 답변을 분석하고 있습니다.</p>
       </div>
     );
   }
@@ -165,6 +143,7 @@ export default function SurveyScreen() {
       <div className="flex flex-col items-center justify-center min-h-screen bg-[#FDFBF7] p-6 fade-in">
         <div className="max-w-2xl w-full bg-white p-8 shadow-xl border border-[#E8E4D9] relative">
 
+          {/* 동물 결과 */}
           <div className="text-center mb-8 border-b-2 border-dashed border-[#D6CFC7] pb-6">
             <span className="text-xs font-serif text-[#9C8F80] tracking-[0.2em] uppercase">Diagnosis Result</span>
             <h1 className="text-3xl font-serif font-bold mt-3 text-[#5C4D41]">
@@ -173,9 +152,10 @@ export default function SurveyScreen() {
             <p className="text-lg text-[#6E6359] mt-4 font-serif italic">"{result.description}"</p>
           </div>
 
+          {/* 1. 기본 처방전 (분량 늘어난 부분) */}
           <div className="bg-[#FAFAF5] p-6 rounded-sm border border-[#E8E4D9] mb-6 shadow-sm">
             <h3 className="text-md font-serif font-bold text-[#8B5E3C] mb-4 flex items-center">
-              <span className="mr-2 text-xl">📋</span> 마음 진단서
+              <span className="mr-2 text-xl">📋</span> 마음 정밀 진단 (무료)
             </h3>
             <p className="text-[#5C4D41] leading-loose font-serif whitespace-pre-wrap text-md">
               {typedText}
@@ -183,26 +163,27 @@ export default function SurveyScreen() {
             </p>
           </div>
 
-          <div className={`relative overflow-hidden rounded-sm border border-[#E8E4D9] transition-colors duration-500 ${isPaid ? 'bg-white' : 'bg-gray-50'}`}>
-            <div className={`p-6 transition-all duration-700 ${isPaid ? '' : 'filter blur-[5px] opacity-60 select-none'}`}>
-               <h3 className="text-md font-serif font-bold text-[#8B5E3C] mb-4">💊 심화 처방전</h3>
+          {/* 2. 심화 처방전 (블러 처리 & 잠김) */}
+          <div className={`relative overflow-hidden rounded-sm border border-[#E8E4D9] transition-colors duration-500 bg-gray-50`}>
+            {/* 블러된 텍스트 */}
+            <div className={`p-6 filter blur-[5px] opacity-60 select-none`}>
+               <h3 className="text-md font-serif font-bold text-[#8B5E3C] mb-4">💊 심화 솔루션</h3>
                <p className="text-[#5C4D41] leading-loose font-serif whitespace-pre-wrap text-sm">
                  {paidContent}
                </p>
             </div>
 
-            {!isPaid && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/40 backdrop-blur-[1px]">
-                <div className="text-2xl mb-2 animate-bounce">🔒</div>
-                <p className="text-[#5C4D41] font-serif mb-4 text-sm font-bold opacity-80">나만을 위한 심화 솔루션이 있어요</p>
+            {/* 잠금 오버레이 */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/40 backdrop-blur-[1px]">
+                <div className="text-2xl mb-2">🔒</div>
+                <p className="text-[#5C4D41] font-serif mb-4 text-sm font-bold opacity-80">심화 솔루션 (준비 중)</p>
                 <button
-                  onClick={handlePayment}
-                  className="px-8 py-3 bg-[#8B5E3C] text-white font-serif rounded-full hover:bg-[#6D4C32] transition-all shadow-md transform hover:scale-105 flex items-center"
+                  onClick={handleLockedClick}
+                  className="px-8 py-3 bg-[#9CA3AF] text-white font-serif rounded-full cursor-not-allowed shadow-none"
                 >
-                  심화 처방전 열기 (₩800)
+                  오픈 예정
                 </button>
-              </div>
-            )}
+            </div>
           </div>
 
           <button onClick={() => window.location.reload()} className="w-full mt-10 text-[#9C8F80] text-sm font-serif underline hover:text-[#8B5E3C] transition-colors">
