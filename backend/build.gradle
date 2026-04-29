@@ -1,0 +1,49 @@
+plugins {
+    id 'java'
+    // 👇 스프링 부트 버전을 최신 안정 버전(3.4.2)으로 변경
+    id 'org.springframework.boot' version '3.4.2'
+    // 👇 ⭐ [핵심] 이 플러그인 버전을 1.1.7로 올려야 에러가 사라집니다!
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'org.soulbattery'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+    // Spring AI는 아직 개발 중인 버전이라 마일스톤 저장소가 꼭 필요합니다
+    maven { url 'https://repo.spring.io/milestone' }
+}
+
+ext {
+    // Spring AI 버전 (호환성 좋은 최신 버전)
+    set('springAiVersion', "1.0.0-M5")
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // Spring AI (OpenAI)
+    implementation 'org.springframework.ai:spring-ai-openai-spring-boot-starter'
+
+    // H2 데이터베이스
+    runtimeOnly 'com.h2database:h2'
+
+    // 유틸리티
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.ai:spring-ai-bom:${springAiVersion}"
+    }
+}
