@@ -1,7 +1,7 @@
 export type Question = {
     id: number;
     text: string;
-    axis: 'BODY' | 'MIND' | 'ACT'; // 축 정보 (나중에 분석할 때 사용)
+    axis: 'BODY' | 'MIND' | 'ACT'; // 축 정보 (30개 질문 완성 - 강제 재배포 v2)
 };
 
 export const QUESTIONS: Question[] = [
