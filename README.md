@@ -1,11 +1,17 @@
-역할 및 개발 직무 집중도
+## 🛠️ Side Project
 
+- Category: Side Project
+- Project Name: SoulBattery
+- Project Scale: 1-Member (Solo) Project
+- Project Summary: Analyzes psychological types through 30 survey questions and provides AI-driven analysis and burnout solutions.
 
-분류: 1인 개발
-- Backend (주력 분야): Java / Spring AI / Docker 기반 인프라 구축 / Cloudtype
-  - 서비스의 핵심인 성격 분석 알고리즘 및 백엔드 로직 설계
-  - 분석의 정교화를 위해 질문 문항을 15개에서 30개로 확장하며 Java 기반 데이터 처리 로직 고도화
-  - Spring AI 연동을 통한 지능형 데이터 분석 구현
-- Frontend (생산성 효율화): React / Vercel
-  - 백엔드 개발에 리소스를 100% 집중하기 위해, 프론트엔드는 AI 툴을 적극적으로 지휘(Prompt Engineering)하여 프로토타입을 빠르게 뽑아내는 방식으로 진행
-  - 이를 통해 화면 구현에 드는 리소스를 최소화하고, Spring AI 인프라 구축과 서버 로직 안정화에 더 많은 시간을 투자
+### ⚙️ Role & Development Focus
+
+#### Backend (Main Focus): Java / Spring AI / Docker-based Infrastructure / Cloudtype
+- Designed the core personality analysis algorithm and backend logic.
+- Expanded the survey from 15 to 30 questions to increase analysis precision, advancing the Java-based data processing logic.
+- Implemented intelligent data analysis by integrating Spring AI.
+
+#### Frontend (Productivity Efficiency): React / Vercel
+- To focus 100% of resources on backend development, the frontend was built by actively directing AI tools (Prompt Engineering) to quickly generate a prototype.
+- Minimized resources spent on UI implementation, investing more time into establishing the Spring AI infrastructure and stabilizing server logic.
