@@ -1,4 +1,6 @@
 역할 및 개발 직무 집중도
+
+
 분류: 1인 개발
 - Backend (주력 분야): Java / Spring AI / Docker 기반 인프라 구축 / Cloudtype
   - 서비스의 핵심인 성격 분석 알고리즘 및 백엔드 로직 설계
