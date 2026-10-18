@@ -1,5 +1,7 @@
 # 로컬 개발 기본값: H2 메모리 DB (서버를 끄면 데이터가 사라짐)
-# 운영 배포: SPRING_PROFILES_ACTIVE=prod 로 실행하면 아래 prod 설정(MySQL)이 적용됨
+# 운영 배포: SPRING_PROFILES_ACTIVE=prod 로 실행하면 아래 prod 설정이 적용됨
+#   - 기본: 서버 디스크(/data)의 H2 파일 DB (재시작해도 유지)
+#   - DB_URL 등을 넣으면 MySQL 로 전환 (드라이버는 URL 을 보고 자동 선택)
 # 비밀값은 모두 환경 변수로 넣고, 이 파일에는 절대 직접 적지 않는다.
 spring:
   application:
@@ -44,10 +46,10 @@ spring:
     activate:
       on-profile: prod
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    # MySQL 예: jdbc:mysql://{호스트}:{포트}/soulbattery?serverTimezone=UTC&characterEncoding=UTF-8
+    url: ${DB_URL:jdbc:h2:file:${DB_FILE_PATH:/data/soulbattery};MODE=MySQL}
+    username: ${DB_USERNAME:sa}
+    password: ${DB_PASSWORD:}
   h2:
     console:
       enabled: false
