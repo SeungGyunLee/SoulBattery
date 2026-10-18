@@ -46,7 +46,15 @@ function TrendChart({ records }: { records: SoulRecord[] }) {
     );
 }
 
-export default function HistoryCard({ records, onClear }: { records: SoulRecord[]; onClear: () => void }) {
+type Props = {
+    records: SoulRecord[];
+    onClear: () => void;
+    loggedIn: boolean;
+    /** 비로그인 상태에서 로그인 안내를 보여줄 때만 전달 */
+    onLogin?: () => void;
+};
+
+export default function HistoryCard({ records, onClear, loggedIn, onLogin }: Props) {
     if (records.length === 0) return null;
 
     const latest = records[records.length - 1];
@@ -54,7 +62,8 @@ export default function HistoryCard({ records, onClear }: { records: SoulRecord[
     const innerDelta = previous ? latest.innerBattery - previous.innerBattery : 0;
 
     const handleClear = () => {
-        if (window.confirm('이 기기에 저장된 점검 기록을 모두 지울까요?')) onClear();
+        const where = loggedIn ? '계정에' : '이 기기에';
+        if (window.confirm(`${where} 저장된 점검 기록을 모두 지울까요?`)) onClear();
     };
 
     return (
@@ -86,8 +95,15 @@ export default function HistoryCard({ records, onClear }: { records: SoulRecord[
                 </p>
             )}
 
+            {!loggedIn && onLogin && (
+                <button onClick={onLogin}
+                        className="mt-4 w-full py-2.5 bg-[#FEE500] text-[#191919] text-xs font-bold rounded-lg">
+                    카카오로 로그인하면 다른 기기에서도 기록을 볼 수 있어요
+                </button>
+            )}
+
             <div className="flex justify-between items-center gap-3 mt-4 pt-3 border-t border-[#E8E4D9] text-[11px] text-[#9C8F80]">
-                <span>기록은 이 기기의 브라우저에만 저장돼요.</span>
+                <span>{loggedIn ? '기록은 내 계정에 저장돼요.' : '기록은 이 기기의 브라우저에만 저장돼요.'}</span>
                 <button onClick={handleClear} className="shrink-0 whitespace-nowrap underline hover:text-[#8B5E3C]">기록 지우기</button>
             </div>
         </div>

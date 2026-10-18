@@ -33,8 +33,9 @@ dependencies {
     // Spring AI (OpenAI)
     implementation 'org.springframework.ai:spring-ai-openai-spring-boot-starter'
 
-    // H2 데이터베이스
+    // DB: 로컬은 H2, 운영(prod 프로필)은 MySQL
     runtimeOnly 'com.h2database:h2'
+    runtimeOnly 'com.mysql:mysql-connector-j'
 
     // 유틸리티
     compileOnly 'org.projectlombok:lombok'

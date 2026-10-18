@@ -1,0 +1,59 @@
+# 로컬 개발 기본값: H2 메모리 DB (서버를 끄면 데이터가 사라짐)
+# 운영 배포: SPRING_PROFILES_ACTIVE=prod 로 실행하면 아래 prod 설정(MySQL)이 적용됨
+# 비밀값은 모두 환경 변수로 넣고, 이 파일에는 절대 직접 적지 않는다.
+spring:
+  application:
+    name: soul-battery
+  datasource:
+    url: jdbc:h2:mem:soulbattery;MODE=MySQL;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: true
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+  ai:
+    openai:
+      # SPRING_AI_OPENAI_API_KEY 환경 변수가 있으면 그 값이 우선 적용됨
+      api-key: ${OPENAI_API_KEY:}
+      chat:
+        options:
+          model: gpt-4o-mini
+          temperature: 0.7
+
+app:
+  jwt:
+    # 로컬 전용 기본값. 운영(prod)에서는 JWT_SECRET 환경 변수 필수 (32자 이상)
+    secret: ${JWT_SECRET:local-dev-only-secret-please-change-0123456789}
+    expiry: 14d
+  kakao:
+    rest-api-key: ${KAKAO_REST_API_KEY:}
+    client-secret: ${KAKAO_CLIENT_SECRET:}
+    redirect-uri: ${KAKAO_REDIRECT_URI:http://localhost:5173/oauth/kakao}
+  cors:
+    allowed-origins:
+      - https://soulbattery.vercel.app
+      - http://localhost:5173
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  h2:
+    console:
+      enabled: false
+
+app:
+  jwt:
+    secret: ${JWT_SECRET}
+  kakao:
+    redirect-uri: ${KAKAO_REDIRECT_URI:https://soulbattery.vercel.app/oauth/kakao}
