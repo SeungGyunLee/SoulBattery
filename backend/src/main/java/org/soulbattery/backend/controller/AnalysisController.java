@@ -12,7 +12,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/analysis")
-@CrossOrigin(origins = "https://soulbattery.vercel.app")
+@CrossOrigin(origins = {"https://soulbattery.vercel.app", "http://localhost:5173"})
 public class AnalysisController {
 
     private final ScoringService scoringService;
