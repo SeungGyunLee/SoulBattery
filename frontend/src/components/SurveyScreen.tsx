@@ -1,5 +1,13 @@
 import { useState, useEffect, type ChangeEvent } from 'react'
 import { QUESTIONS } from '../constants/questions'; // ✨ 외부 질문 리스트 불러오기
+import { recordStore, type SoulRecord } from '../storage/recordStore';
+import HistoryCard from './HistoryCard';
+
+const daysAgo = (iso: string) => {
+    const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    const days = Math.round((startOfDay(new Date()) - startOfDay(new Date(iso))) / 86_400_000);
+    return days === 0 ? '오늘' : days === 1 ? '어제' : `${days}일 전`;
+};
 
 // 카카오 SDK 타입 정의 (TS 에러 방지)
 declare global {
@@ -47,6 +55,19 @@ export default function SurveyScreen() {
 
     const [paidContent, setPaidContent] = useState("");
     const [typedText, setTypedText] = useState("");
+
+    // 이 기기에 저장된 점검 기록 (오래된 순)
+    const [history, setHistory] = useState<SoulRecord[]>([]);
+    const lastRecord = history.length > 0 ? history[history.length - 1] : null;
+
+    useEffect(() => {
+        recordStore.list().then(setHistory);
+    }, []);
+
+    const clearHistory = async () => {
+        await recordStore.clear();
+        setHistory([]);
+    };
 
     // ✨ 1. 카카오톡 초기화
     useEffect(() => {
@@ -114,8 +135,19 @@ export default function SurveyScreen() {
                 body: JSON.stringify({ answers: payload }),
             });
             if (!response.ok) throw new Error('서버 통신 실패');
-            const data = await response.json();
+            const data: AnalysisResult = await response.json();
             setResult(data);
+
+            const saved = await recordStore.add({
+                typeCode: data.typeCode,
+                typeName: data.typeName,
+                symbol: data.symbol,
+                outerBattery: data.outerBattery,
+                innerBattery: data.innerBattery,
+                openness: data.openness,
+                userGuess,
+            });
+            setHistory((prev) => [...prev, saved]);
         } catch(error) {
             console.error(error); // 변수 사용
             alert("...");
@@ -170,6 +202,12 @@ export default function SurveyScreen() {
                         <p>"소울 배터리에 오신 걸 환영해요."</p>
                         <p>검사를 시작하기 전에,<br />본인이 생각하는 마음 배터리 잔량은 몇 % 인가요?</p>
                     </div>
+
+                    {lastRecord && (
+                        <p className="mb-6 text-xs font-serif text-[#9C8F80]">
+                            지난 점검 {daysAgo(lastRecord.createdAt)} · 속 배터리 {lastRecord.innerBattery}%
+                        </p>
+                    )}
 
                     <div className="mb-10 px-4">
                         <div className="flex justify-between text-xs font-bold text-[#8B5E3C] mb-2">
@@ -307,6 +345,8 @@ export default function SurveyScreen() {
                         </div>
                     </div>
                     )}
+
+                    <HistoryCard records={history} onClear={clearHistory} />
 
                     {/* 공유 버튼 섹션 */}
                     <div className="flex gap-2 justify-center w-full mb-10">
