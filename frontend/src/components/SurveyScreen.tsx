@@ -17,20 +17,33 @@ declare global {
     }
 }
 
+// 백엔드 /api/analysis/submit 응답
+type AnalysisResult = {
+    typeCode: string;
+    typeName: string;
+    description: string;
+    symbol: string;
+    outerBattery: number; // 겉 배터리 (0~100)
+    innerBattery: number; // 속 배터리 (0~100)
+    openness: number;     // 표현 (0~100)
+    gap: number;          // 겉 - 속
+    needsSupport: boolean;
+    aiComment: string;
+};
+
+const batteryColor = (value: number) =>
+    value < 30 ? 'bg-red-400' : value < 70 ? 'bg-[#8B5E3C]' : 'bg-green-600';
+
 export default function SurveyScreen() {
     const [showIntro, setShowIntro] = useState(true);
     const [step, setStep] = useState(0);
     const [answers, setAnswers] = useState<number[]>([]);
     const [loading, setLoading] = useState(false);
-    const [result, setResult] = useState<{
-        animal: string;
-        description: string;
-        aiComment: string;
-    } | null>(null);
+    const [result, setResult] = useState<AnalysisResult | null>(null);
 
-    // 사용자가 생각하는 배터리 & 실제 배터리
+    // 사용자가 생각하는 배터리 & 실제(속) 배터리
     const [userGuess, setUserGuess] = useState(50);
-    const [actualBattery, setActualBattery] = useState(0);
+    const actualBattery = result?.innerBattery ?? 0;
 
     const [paidContent, setPaidContent] = useState("");
     const [typedText, setTypedText] = useState("");
@@ -56,8 +69,8 @@ export default function SurveyScreen() {
         window.Kakao.Share.sendCustom({
             templateId: TEMPLATE_ID,
             templateArgs: {
-                'TITLE': `🔋 내 마음 배터리: ${actualBattery}%`,
-                'DESC': `나는 [${result?.animal}] 유형입니다.\n친구들도 내 배터리를 확인해보세요!`,
+                'TITLE': `🔋 내 속 배터리: ${actualBattery}%`,
+                'DESC': `나는 [${result?.typeName}] 유형입니다.\n친구들도 내 배터리를 확인해보세요!`,
                 'IMAGE': 'https://soulbattery.vercel.app/sb-icon.png?v=8'
             },
         });
@@ -87,24 +100,18 @@ export default function SurveyScreen() {
     const submitSurvey = async (finalAnswers: number[]) => {
         setLoading(true);
 
-        // 배터리 계산 로직
-        const totalScore = finalAnswers.reduce((acc, curr) => acc + curr, 0);
-        const maxScore = QUESTIONS.length * 5;
-        const minScore = QUESTIONS.length * 1;
-
-        // ✨ 계산식 수정: 질문이 긍정적이므로 점수가 높을수록 배터리가 100%에 가까워짐
-        const calculatedBattery = Math.round(
-            ((totalScore - minScore) / (maxScore - minScore)) * 100
-        );
-        setActualBattery(calculatedBattery);
-
+        // 채점(축별 점수, 역채점, 유형 분류)은 백엔드에서 문항 id 기준으로 처리
+        const payload = finalAnswers.map((score, index) => ({
+            questionId: QUESTIONS[index].id,
+            score,
+        }));
 
         try {
             const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080';
             const response = await fetch(apiUrl + '/api/analysis/submit', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ answers: finalAnswers }),
+                body: JSON.stringify({ answers: payload }),
             });
             if (!response.ok) throw new Error('서버 통신 실패');
             const data = await response.json();
@@ -193,7 +200,7 @@ export default function SurveyScreen() {
         return (
             <div className="flex flex-col items-center justify-center h-screen bg-[#FDFBF7] text-[#4A4036] fade-in">
                 <div className="animate-bounce text-4xl mb-4">☕</div>
-                <h2 className="text-xl font-serif tracking-widest text-[#8C7B6C]">진단서 작성 중...</h2>
+                <h2 className="text-xl font-serif tracking-widest text-[#8C7B6C]">마음 리포트 작성 중...</h2>
                 <p className="text-sm mt-2 text-[#B0A396] font-serif">당신의 답변을 분석하고 있습니다.</p>
             </div>
         );
@@ -206,9 +213,10 @@ export default function SurveyScreen() {
                 <div className="max-w-2xl w-full bg-white p-8 shadow-xl border border-[#E8E4D9] relative">
 
                     <div className="text-center mb-8 border-b-2 border-dashed border-[#D6CFC7] pb-6">
-                        <span className="text-xs font-serif text-[#9C8F80] tracking-[0.2em] uppercase">Diagnosis Result</span>
+                        <span className="text-xs font-serif text-[#9C8F80] tracking-[0.2em] uppercase">Soul Report</span>
+                        <div className="text-5xl mt-4">{result.symbol}</div>
                         <h1 className="text-3xl font-serif font-bold mt-3 text-[#5C4D41]">
-                            당신은 <span className="text-[#8B5E3C] underline decoration-[#D6CFC7] underline-offset-4">[{result.animal}]</span> 입니다.
+                            당신은 <span className="text-[#8B5E3C] underline decoration-[#D6CFC7] underline-offset-4">[{result.typeName}]</span> 입니다.
                         </h1>
                         <p className="text-lg text-[#6E6359] mt-4 font-serif italic">"{result.description}"</p>
                     </div>
@@ -228,30 +236,49 @@ export default function SurveyScreen() {
                             </div>
                         </div>
 
-                        {/* 실제 결과 */}
-                        <div>
-                            <div className="flex justify-between text-xs mb-1 text-[#8B5E3C] font-bold">
-                                <span>실제 진단</span>
-                                <span>{actualBattery}%</span>
-                            </div>
-                            <div className="w-full bg-[#E8E4D9] h-3 rounded-full overflow-hidden">
-                                <div
-                                    className={`h-full transition-all duration-1000 ${actualBattery < 30 ? 'bg-red-400' : actualBattery < 70 ? 'bg-[#8B5E3C]' : 'bg-green-600'}`}
-                                    style={{ width: `${actualBattery}%` }}>
+                        {/* 겉 배터리 / 속 배터리 */}
+                        {[
+                            { label: '겉 배터리 (일상을 굴리는 힘)', value: result.outerBattery },
+                            { label: '속 배터리 (실제 남은 에너지)', value: result.innerBattery },
+                        ].map(({ label, value }) => (
+                            <div key={label} className="mb-4 last:mb-0">
+                                <div className="flex justify-between text-xs mb-1 text-[#8B5E3C] font-bold">
+                                    <span>{label}</span>
+                                    <span>{value}%</span>
+                                </div>
+                                <div className="w-full bg-[#E8E4D9] h-3 rounded-full overflow-hidden">
+                                    <div
+                                        className={`h-full transition-all duration-1000 ${batteryColor(value)}`}
+                                        style={{ width: `${value}%` }}>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        ))}
 
-                        <p className="text-center text-xs text-[#9C8F80] mt-4 font-serif">
-                            {Math.abs(userGuess - actualBattery) > 20
-                                ? "생각하신 것과 실제 마음의 상태가 많이 다르네요. 😢"
-                                : "자신의 상태를 아주 잘 파악하고 계시네요! 👍"}
+                        <p className="text-center text-xs text-[#9C8F80] mt-4 font-serif leading-relaxed">
+                            {result.gap >= 20
+                                ? "겉으로는 잘 해내고 있지만, 속은 그만큼 채워져 있지 않아요."
+                                : Math.abs(userGuess - actualBattery) > 20
+                                    ? "생각하신 것과 실제 속 배터리가 꽤 다르네요."
+                                    : "자신의 상태를 잘 알고 계시네요."}
                         </p>
                     </div>
 
+                    {/* 속 배터리가 매우 낮을 때: 결제 안내 대신 도움 연결 */}
+                    {result.needsSupport && (
+                        <div className="mb-8 p-5 bg-white border-2 border-[#D6CFC7] rounded-sm font-serif text-[#5C4D41] text-sm leading-relaxed">
+                            <p className="font-bold mb-2">혼자 버티지 않아도 괜찮아요.</p>
+                            <p className="mb-3">지금은 믿을 수 있는 사람이나 전문 상담과 이야기를 나눠 보세요. 24시간 언제든 연결돼요.</p>
+                            <ul className="space-y-1">
+                                <li>자살예방상담전화 <a href="tel:109" className="font-bold text-[#8B5E3C] underline">109</a></li>
+                                <li>정신건강위기상담 <a href="tel:15770199" className="font-bold text-[#8B5E3C] underline">1577-0199</a></li>
+                            </ul>
+                        </div>
+                    )}
+
                     <div className="bg-[#FAFAF5] p-6 rounded-sm border border-[#E8E4D9] mb-6 shadow-sm">
                         <h3 className="text-md font-serif font-bold text-[#8B5E3C] mb-4 flex items-center">
-                            <span className="mr-2 text-xl">📋</span> 마음 정밀 진단
+                            <span className="mr-2 text-xl">📋</span> 마음 리포트
                         </h3>
                         <p className="text-[#5C4D41] leading-loose font-serif whitespace-pre-wrap text-md">
                             {typedText}
@@ -259,6 +286,7 @@ export default function SurveyScreen() {
                         </p>
                     </div>
 
+                    {!result.needsSupport && (
                     <div className={`relative overflow-hidden rounded-sm border border-[#E8E4D9] transition-colors duration-500 bg-gray-50 mb-8`}>
                         <div className={`p-6 filter blur-[5px] opacity-60 select-none`}>
                             <h3 className="text-md font-serif font-bold text-[#8B5E3C] mb-4">💊 심화 솔루션</h3>
@@ -278,6 +306,7 @@ export default function SurveyScreen() {
                             </button>
                         </div>
                     </div>
+                    )}
 
                     {/* 공유 버튼 섹션 */}
                     <div className="flex gap-2 justify-center w-full mb-10">
