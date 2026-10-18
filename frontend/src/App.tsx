@@ -1,10 +1,14 @@
 import SurveyScreen from "./components/SurveyScreen";
+import KakaoCallback from "./components/KakaoCallback";
+import { KAKAO_CALLBACK_PATH } from "./auth/kakao";
 
 function App() {
+  // 화면이 두 개뿐이라 라우터 없이 주소로만 나눈다
+  if (window.location.pathname === KAKAO_CALLBACK_PATH) {
+    return <KakaoCallback />;
+  }
   return (
     <div className="w-full h-full">
-       {/* 나중에는 라우터(Router)를 써서 메인/설문/결과 페이지를 나눌 겁니다. */}
-       {/* 지금은 설문 화면만 바로 보여줍시다. */}
       <SurveyScreen />
     </div>
   );

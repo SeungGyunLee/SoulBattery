@@ -1,6 +1,9 @@
 import { useState, useEffect, type ChangeEvent } from 'react'
 import { QUESTIONS } from '../constants/questions'; // ✨ 외부 질문 리스트 불러오기
-import { recordStore, type SoulRecord } from '../storage/recordStore';
+import { getRecordStore, localRecordStore, type NewSoulRecord, type SoulRecord } from '../storage/recordStore';
+import { clearSession, getSession, type Session } from '../auth/session';
+import { kakaoLoginEnabled, startKakaoLogin } from '../auth/kakao';
+import { UnauthorizedError } from '../api';
 import HistoryCard from './HistoryCard';
 
 const daysAgo = (iso: string) => {
@@ -56,17 +59,46 @@ export default function SurveyScreen() {
     const [paidContent, setPaidContent] = useState("");
     const [typedText, setTypedText] = useState("");
 
-    // 이 기기에 저장된 점검 기록 (오래된 순)
+    // 로그인 상태와 점검 기록 (오래된 순). 로그인하면 계정, 아니면 이 기기에서 불러온다.
+    const [session, setSession] = useState<Session | null>(() => getSession());
     const [history, setHistory] = useState<SoulRecord[]>([]);
     const lastRecord = history.length > 0 ? history[history.length - 1] : null;
 
+    // 로그인이 만료되면 비로그인 상태로 돌아가 기기 기록을 보여준다
+    const handleStoreError = async (error: unknown) => {
+        console.error(error);
+        if (error instanceof UnauthorizedError) {
+            setSession(null);
+            setHistory(await localRecordStore.list());
+        }
+    };
+
     useEffect(() => {
-        recordStore.list().then(setHistory);
+        getRecordStore().list().then(setHistory).catch(handleStoreError);
     }, []);
 
+    const saveRecord = async (record: NewSoulRecord) => {
+        try {
+            const saved = await getRecordStore().add(record);
+            setHistory((prev) => [...prev, saved]);
+        } catch (error) {
+            await handleStoreError(error);
+        }
+    };
+
     const clearHistory = async () => {
-        await recordStore.clear();
-        setHistory([]);
+        try {
+            await getRecordStore().clear();
+            setHistory([]);
+        } catch (error) {
+            await handleStoreError(error);
+        }
+    };
+
+    const logout = async () => {
+        clearSession();
+        setSession(null);
+        setHistory(await localRecordStore.list());
     };
 
     // ✨ 1. 카카오톡 초기화
@@ -138,7 +170,8 @@ export default function SurveyScreen() {
             const data: AnalysisResult = await response.json();
             setResult(data);
 
-            const saved = await recordStore.add({
+            // 기록 저장에 실패해도 결과 화면은 그대로 보여준다
+            void saveRecord({
                 typeCode: data.typeCode,
                 typeName: data.typeName,
                 symbol: data.symbol,
@@ -147,7 +180,6 @@ export default function SurveyScreen() {
                 openness: data.openness,
                 userGuess,
             });
-            setHistory((prev) => [...prev, saved]);
         } catch(error) {
             console.error(error); // 변수 사용
             alert("...");
@@ -228,6 +260,18 @@ export default function SurveyScreen() {
                     <button onClick={() => setShowIntro(false)} className="px-10 py-4 bg-[#8B5E3C] text-white font-serif rounded-full hover:bg-[#6D4C32] transition-all shadow-md transform hover:scale-105">
                         내 마음 측정하기
                     </button>
+
+                    {session ? (
+                        <p className="mt-6 text-xs font-serif text-[#9C8F80]">
+                            {session.nickname ?? '회원'}님의 기록은 계정에 저장돼요 ·{' '}
+                            <button onClick={logout} className="underline hover:text-[#8B5E3C]">로그아웃</button>
+                        </p>
+                    ) : kakaoLoginEnabled && (
+                        <button onClick={startKakaoLogin}
+                                className="mt-6 w-full max-w-[240px] mx-auto flex items-center justify-center gap-2 py-3 bg-[#FEE500] text-[#191919] text-sm font-bold rounded-lg">
+                            카카오로 로그인하고 기록 이어가기
+                        </button>
+                    )}
                 </div>
             </div>
         );
@@ -346,7 +390,12 @@ export default function SurveyScreen() {
                     </div>
                     )}
 
-                    <HistoryCard records={history} onClear={clearHistory} />
+                    <HistoryCard
+                        records={history}
+                        onClear={clearHistory}
+                        loggedIn={session !== null}
+                        onLogin={kakaoLoginEnabled ? startKakaoLogin : undefined}
+                    />
 
                     {/* 공유 버튼 섹션 */}
                     <div className="flex gap-2 justify-center w-full mb-10">

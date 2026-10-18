@@ -1,10 +1,12 @@
+import { apiFetch } from '../api';
+import { getSession } from '../auth/session';
+
 /**
  * 점검 기록 저장소.
  *
- * 지금은 로그인 없이 브라우저(localStorage)에만 저장한다.
- * 나중에 로그인을 붙이면 같은 인터페이스로 서버 저장소(ServerRecordStore)를 만들어 바꿔 끼우고,
- * 로그인 시점에 LocalRecordStore의 기록을 서버로 옮긴 뒤 비우면 된다.
- * 그래서 서버 호출처럼 모든 메서드를 비동기로 둔다.
+ * - 로그인 전: 브라우저(localStorage)에 저장 → LocalRecordStore
+ * - 로그인 후: 서버 계정에 저장 → ServerRecordStore
+ * 로그인하는 순간 migrateLocalRecords()로 기기 기록을 계정으로 옮기고 기기 쪽은 비운다.
  */
 export type SoulRecord = {
     id: string;
@@ -84,4 +86,34 @@ export class LocalRecordStore implements RecordStore {
     }
 }
 
-export const recordStore: RecordStore = new LocalRecordStore();
+export class ServerRecordStore implements RecordStore {
+    async list() {
+        const response = await apiFetch('/api/records');
+        return (await response.json()) as SoulRecord[];
+    }
+
+    async add(record: NewSoulRecord) {
+        const response = await apiFetch('/api/records', { method: 'POST', body: JSON.stringify(record) });
+        return (await response.json()) as SoulRecord;
+    }
+
+    async clear() {
+        await apiFetch('/api/records', { method: 'DELETE' });
+    }
+}
+
+export const localRecordStore = new LocalRecordStore();
+const serverRecordStore = new ServerRecordStore();
+
+/** 현재 로그인 상태에 맞는 저장소 */
+export function getRecordStore(): RecordStore {
+    return getSession() ? serverRecordStore : localRecordStore;
+}
+
+/** 기기에 쌓인 기록을 로그인한 계정으로 옮긴다. 성공했을 때만 기기 기록을 지운다. */
+export async function migrateLocalRecords() {
+    const records = await localRecordStore.list();
+    if (records.length === 0) return;
+    await apiFetch('/api/records/import', { method: 'POST', body: JSON.stringify({ records }) });
+    await localRecordStore.clear();
+}
