@@ -23,3 +23,41 @@ body {
   background: #8c7b70; 
   border-radius: 4px;
 }
+/* ---------- 처방전 대기 화면: 시골 마을 장면 ---------- */
+.sb-rise   { animation: sb-rise 6s ease-out forwards; }
+.sb-mist   { animation: sb-drift 9s ease-in-out infinite alternate; }
+.sb-birds  { animation: sb-drift 7s ease-in-out infinite alternate; }
+.sb-cloud  { animation: sb-cloud 18s linear infinite alternate; }
+.sb-sway   { transform-box: fill-box; transform-origin: bottom center; animation: sb-sway 2.4s ease-in-out infinite alternate; }
+.sb-smoke  { transform-box: fill-box; transform-origin: center; animation: sb-smoke 3.3s ease-out infinite; opacity: 0; }
+.sb-steam  { animation: sb-steam 2.1s ease-out infinite; opacity: 0; }
+.sb-breathe { transform-box: fill-box; transform-origin: bottom center; animation: sb-breathe 3s ease-in-out infinite; }
+.sb-glow   { animation: sb-glow 2.2s ease-in-out infinite; opacity: 0.2; }
+.sb-twinkle { animation: sb-glow 2.8s ease-in-out infinite; }
+.sb-letter { animation: sb-letter 1.4s ease-out both; }
+.sb-halo   { transform-box: fill-box; transform-origin: center; animation: sb-halo 2.2s ease-in-out infinite; }
+.sb-caption { animation: sb-caption 0.9s ease-out both; }
+
+@keyframes sb-rise    { from { transform: translateY(22px); } to { transform: translateY(0); } }
+@keyframes sb-drift   { from { transform: translateX(-10px); } to { transform: translateX(12px); } }
+@keyframes sb-cloud   { from { transform: translateX(-24px); } to { transform: translateX(30px); } }
+@keyframes sb-sway    { from { transform: rotate(-5deg); } to { transform: rotate(6deg); } }
+@keyframes sb-smoke   { 0% { opacity: 0; transform: translateY(0) scale(0.6); }
+                        25% { opacity: 0.8; }
+                        100% { opacity: 0; transform: translate(10px, -46px) scale(1.9); } }
+@keyframes sb-steam   { 0% { opacity: 0; transform: translateY(4px); }
+                        40% { opacity: 0.85; }
+                        100% { opacity: 0; transform: translateY(-14px); } }
+@keyframes sb-breathe { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.05); } }
+@keyframes sb-glow    { 0%, 100% { opacity: 0.15; } 50% { opacity: 1; } }
+@keyframes sb-letter  { from { transform: translateY(-26px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes sb-halo    { 0%, 100% { transform: scale(0.92); opacity: 0.7; } 50% { transform: scale(1.08); opacity: 1; } }
+@keyframes sb-caption { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .sb-rise, .sb-mist, .sb-birds, .sb-cloud, .sb-sway, .sb-breathe, .sb-letter, .sb-halo, .sb-caption {
+    animation: none;
+  }
+  .sb-smoke, .sb-steam { animation: none; opacity: 0.6; }
+  .sb-glow, .sb-twinkle { animation: none; opacity: 0.8; }
+}
