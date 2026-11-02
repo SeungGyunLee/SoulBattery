@@ -5,6 +5,7 @@ import { clearSession, getSession, type Session } from '../auth/session';
 import { kakaoLoginEnabled, startKakaoLogin } from '../auth/kakao';
 import { UnauthorizedError } from '../api';
 import HistoryCard from './HistoryCard';
+import CountrysideJourney from './CountrysideJourney';
 
 const daysAgo = (iso: string) => {
     const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
@@ -49,14 +50,14 @@ export default function SurveyScreen() {
     const [showIntro, setShowIntro] = useState(true);
     const [step, setStep] = useState(0);
     const [answers, setAnswers] = useState<number[]>([]);
-    const [loading, setLoading] = useState(false);
+    // 처방전을 기다리는 동안 시골 마을 장면을 보여주는 중인지
+    const [journey, setJourney] = useState(false);
     const [result, setResult] = useState<AnalysisResult | null>(null);
 
     // 사용자가 생각하는 배터리 & 실제(속) 배터리
     const [userGuess, setUserGuess] = useState(50);
     const actualBattery = result?.innerBattery ?? 0;
 
-    const [paidContent, setPaidContent] = useState("");
     const [typedText, setTypedText] = useState("");
 
     // 로그인 상태와 점검 기록 (오래된 순). 로그인하면 계정, 아니면 이 기기에서 불러온다.
@@ -151,7 +152,7 @@ export default function SurveyScreen() {
     };
 
     const submitSurvey = async (finalAnswers: number[]) => {
-        setLoading(true);
+        setJourney(true);
 
         // 채점(축별 점수, 역채점, 유형 분류)은 백엔드에서 문항 id 기준으로 처리
         const payload = finalAnswers.map((score, index) => ({
@@ -181,22 +182,20 @@ export default function SurveyScreen() {
                 userGuess,
             });
         } catch(error) {
-            console.error(error); // 변수 사용
-            alert("...");
-        } finally {
-            setLoading(false);
+            console.error(error);
+            setJourney(false);
+            alert("처방전을 만들지 못했어요. 잠시 후 다시 시도해 주세요.");
         }
     };
+    // AI 해설은 [[PAYWALL]] 구분자로 '마음 리포트'와 '2주 충전 루틴'으로 나뉜다.
+    // 루틴은 지금은 무료로 공개한다. (위기 안내 유형은 구분자 없이 리포트만 온다)
     const parts = result?.aiComment ? result.aiComment.split('[[PAYWALL]]') : [];
     const publicText = parts[0] ? parts[0].trim() : "분석 결과가 없습니다.";
-    const paidContentText = (parts.length > 1 && parts[1].trim().length > 0)
-        ? parts[1].trim()
-        : "심화 분석 내용을 불러오지 못했습니다.";
+    const routineText = parts.length > 1 && parts[1].trim().length > 0 ? parts[1].trim() : null;
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
-        // result.aiComment가 없으면 바로 종료
-        if (!result?.aiComment) return;
+        // 장면 전환이 끝나고 결과 화면이 보일 때부터 타이핑을 시작한다
+        if (!result?.aiComment || journey) return;
 
         // 여기서 경고가 뜬다면 아래 주석으로 무시 처리 가능합니다.
         // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -214,11 +213,7 @@ export default function SurveyScreen() {
         }, 50);
 
         return () => clearInterval(typingInterval);
-    }, [result, publicText]);  // 의존성 배열에 publicText 추가
-
-    const handleLockedClick = () => {
-        alert("🚧 현재 심화 처방전은 준비 중입니다.\n조금만 기다려주세요!");
-    };
+    }, [result, publicText, journey]);
 
     // 1️⃣ 시작 화면
     if (showIntro) {
@@ -277,15 +272,9 @@ export default function SurveyScreen() {
         );
     }
 
-    // 2️⃣ 로딩 화면
-    if (loading) {
-        return (
-            <div className="flex flex-col items-center justify-center h-screen bg-[#FDFBF7] text-[#4A4036] fade-in">
-                <div className="animate-bounce text-4xl mb-4">☕</div>
-                <h2 className="text-xl font-serif tracking-widest text-[#8C7B6C]">마음 리포트 작성 중...</h2>
-                <p className="text-sm mt-2 text-[#B0A396] font-serif">당신의 답변을 분석하고 있습니다.</p>
-            </div>
-        );
+    // 2️⃣ 처방전 대기 화면: 시골 마을의 하루가 흐르다가 결과가 오면 우체통 장면을 거쳐 넘어간다
+    if (journey) {
+        return <CountrysideJourney ready={result !== null} onFinish={() => setJourney(false)} />;
     }
 
     // 3️⃣ 결과 화면
@@ -368,26 +357,16 @@ export default function SurveyScreen() {
                         </p>
                     </div>
 
-                    {!result.needsSupport && (
-                    <div className={`relative overflow-hidden rounded-sm border border-[#E8E4D9] transition-colors duration-500 bg-gray-50 mb-8`}>
-                        <div className={`p-6 filter blur-[5px] opacity-60 select-none`}>
-                            <h3 className="text-md font-serif font-bold text-[#8B5E3C] mb-4">💊 심화 솔루션</h3>
+                    {!result.needsSupport && routineText && (
+                        <div className="bg-[#FAFAF5] p-6 rounded-sm border border-[#E8E4D9] mb-8 shadow-sm">
+                            <h3 className="text-md font-serif font-bold text-[#8B5E3C] mb-1 flex items-center">
+                                <span className="mr-2 text-xl">🌱</span> 2주 충전 루틴
+                            </h3>
+                            <p className="text-xs font-serif text-[#9C8F80] mb-4">지금은 누구나 무료로 볼 수 있어요.</p>
                             <p className="text-[#5C4D41] leading-loose font-serif whitespace-pre-wrap text-sm">
-                                {paidContent}
+                                {routineText}
                             </p>
                         </div>
-
-                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/40 backdrop-blur-[1px]">
-                            <div className="text-2xl mb-2">🔒</div>
-                            <p className="text-[#5C4D41] font-serif mb-4 text-sm font-bold opacity-80">심화 솔루션 (준비 중)</p>
-                            <button
-                                onClick={handleLockedClick}
-                                className="px-8 py-3 bg-[#9CA3AF] text-white font-serif rounded-full cursor-not-allowed shadow-none"
-                            >
-                                오픈 예정
-                            </button>
-                        </div>
-                    </div>
                     )}
 
                     <HistoryCard
