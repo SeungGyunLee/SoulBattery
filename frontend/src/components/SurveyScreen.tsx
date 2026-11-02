@@ -6,6 +6,7 @@ import { kakaoLoginEnabled, startKakaoLogin } from '../auth/kakao';
 import { UnauthorizedError } from '../api';
 import HistoryCard from './HistoryCard';
 import CountrysideJourney from './CountrysideJourney';
+import { formatAdvice, splitRoutines } from '../utils/formatAdvice';
 
 const daysAgo = (iso: string) => {
     const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
@@ -190,7 +191,7 @@ export default function SurveyScreen() {
     // AI 해설은 [[PAYWALL]] 구분자로 '마음 리포트'와 '2주 충전 루틴'으로 나뉜다.
     // 루틴은 지금은 무료로 공개한다. (위기 안내 유형은 구분자 없이 리포트만 온다)
     const parts = result?.aiComment ? result.aiComment.split('[[PAYWALL]]') : [];
-    const publicText = parts[0] ? parts[0].trim() : "분석 결과가 없습니다.";
+    const publicText = parts[0] ? formatAdvice(parts[0]) : "분석 결과가 없습니다.";
     const routineText = parts.length > 1 && parts[1].trim().length > 0 ? parts[1].trim() : null;
 
     useEffect(() => {
@@ -363,9 +364,18 @@ export default function SurveyScreen() {
                                 <span className="mr-2 text-xl">🌱</span> 2주 충전 루틴
                             </h3>
                             <p className="text-xs font-serif text-[#9C8F80] mb-4">지금은 누구나 무료로 볼 수 있어요.</p>
-                            <p className="text-[#5C4D41] leading-loose font-serif whitespace-pre-wrap text-sm">
-                                {routineText}
-                            </p>
+                            <div className="space-y-5">
+                                {splitRoutines(routineText).map((block, i) => (
+                                    <div key={i} className={block.title ? 'pt-4 border-t border-[#E8E4D9] first:pt-0 first:border-t-0' : ''}>
+                                        {block.title && (
+                                            <h4 className="font-serif font-bold text-[#5C4D41] text-sm mb-2">{block.title}</h4>
+                                        )}
+                                        <p className="text-[#5C4D41] leading-loose font-serif whitespace-pre-wrap text-sm">
+                                            {block.body}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     )}
 
