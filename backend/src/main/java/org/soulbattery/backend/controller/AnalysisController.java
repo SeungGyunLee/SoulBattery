@@ -2,6 +2,7 @@ package org.soulbattery.backend.controller;
 
 import org.soulbattery.backend.domain.AxisScores;
 import org.soulbattery.backend.domain.SoulType;
+import org.soulbattery.backend.domain.UserNote;
 import org.soulbattery.backend.dto.AnalysisRequest;
 import org.soulbattery.backend.dto.AnalysisResponse;
 import org.soulbattery.backend.service.AiAnalysisService;
@@ -30,8 +31,10 @@ public class AnalysisController {
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
-        SoulType type = scoringService.classify(scores);
-        String aiComment = aiAnalysisService.getAiComment(type, scores);
+        // 한마디 문장은 AI 요청에만 쓰고 저장하지 않는다. 위기 표현이 있으면 점수와 상관없이 도움 연결을 우선한다.
+        String note = UserNote.normalize(request.note()).orElse(null);
+        SoulType type = UserNote.isCrisis(note) ? SoulType.NEEDS_SUPPORT : scoringService.classify(scores);
+        String aiComment = aiAnalysisService.getAiComment(type, scores, note);
 
         return new AnalysisResponse(
                 type.name(),
