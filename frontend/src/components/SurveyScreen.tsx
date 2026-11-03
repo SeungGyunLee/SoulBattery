@@ -8,6 +8,9 @@ import HistoryCard from './HistoryCard';
 import CountrysideJourney from './CountrysideJourney';
 import { formatAdvice, splitRoutines } from '../utils/formatAdvice';
 
+// 마음 리포트 글자가 나타나는 간격 (기존 50ms에서 1.5배 빠르게)
+const TYPING_INTERVAL_MS = 33;
+
 const daysAgo = (iso: string) => {
     const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
     const days = Math.round((startOfDay(new Date()) - startOfDay(new Date(iso))) / 86_400_000);
@@ -211,10 +214,13 @@ export default function SurveyScreen() {
             } else {
                 clearInterval(typingInterval);
             }
-        }, 50);
+        }, TYPING_INTERVAL_MS);
 
         return () => clearInterval(typingInterval);
     }, [result, publicText, journey]);
+
+    // 마음 리포트 타이핑이 끝난 뒤에 2주 충전 루틴을 보여준다
+    const reportDone = result !== null && typedText.length >= publicText.length;
 
     // 1️⃣ 시작 화면
     if (showIntro) {
@@ -354,12 +360,12 @@ export default function SurveyScreen() {
                         </h3>
                         <p className="text-[#5C4D41] leading-loose font-serif whitespace-pre-wrap text-md">
                             {typedText}
-                            <span className="animate-pulse text-[#8B5E3C]">|</span>
+                            {!reportDone && <span className="animate-pulse text-[#8B5E3C]">|</span>}
                         </p>
                     </div>
 
-                    {!result.needsSupport && routineText && (
-                        <div className="bg-[#FAFAF5] p-6 rounded-sm border border-[#E8E4D9] mb-8 shadow-sm">
+                    {!result.needsSupport && routineText && reportDone && (
+                        <div className="sb-caption bg-[#FAFAF5] p-6 rounded-sm border border-[#E8E4D9] mb-8 shadow-sm">
                             <h3 className="text-md font-serif font-bold text-[#8B5E3C] mb-1 flex items-center">
                                 <span className="mr-2 text-xl">🌱</span> 2주 충전 루틴
                             </h3>
