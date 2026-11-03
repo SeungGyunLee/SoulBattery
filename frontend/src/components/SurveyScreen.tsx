@@ -11,6 +11,9 @@ import { formatAdvice, splitRoutines } from '../utils/formatAdvice';
 // 마음 리포트 글자가 나타나는 간격 (기존 50ms에서 1.5배 빠르게)
 const TYPING_INTERVAL_MS = 33;
 
+// 한마디 입력 최대 길이 (백엔드 UserNote.MAX_LENGTH 와 같게)
+const NOTE_MAX_LENGTH = 60;
+
 const daysAgo = (iso: string) => {
     const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
     const days = Math.round((startOfDay(new Date()) - startOfDay(new Date(iso))) / 86_400_000);
@@ -60,6 +63,10 @@ export default function SurveyScreen() {
 
     // 사용자가 생각하는 배터리 & 실제(속) 배터리
     const [userGuess, setUserGuess] = useState(50);
+
+    // "내 배터리 상태를 한마디로 하자면?" — 처방전 요청에만 쓰고 기록에는 저장하지 않는다
+    const [note, setNote] = useState("");
+    const submittedNote = note.trim();
     const actualBattery = result?.innerBattery ?? 0;
 
     const [typedText, setTypedText] = useState("");
@@ -169,7 +176,7 @@ export default function SurveyScreen() {
             const response = await fetch(apiUrl + '/api/analysis/submit', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ answers: payload }),
+                body: JSON.stringify({ answers: payload, note: submittedNote || undefined }),
             });
             if (!response.ok) throw new Error('서버 통신 실패');
             const data: AnalysisResult = await response.json();
@@ -257,6 +264,25 @@ export default function SurveyScreen() {
                             onChange={(e: ChangeEvent<HTMLInputElement>) => setUserGuess(Number(e.target.value))}
                             className="w-full h-2 bg-[#E8E4D9] rounded-lg appearance-none cursor-pointer accent-[#8B5E3C]"
                         />
+                    </div>
+
+                    <div className="mb-10 px-4 text-left">
+                        <label htmlFor="user-note" className="block text-sm font-serif text-[#5C4D41] mb-2">
+                            내 배터리 상태를 한마디로 하자면? <span className="text-[#9C8F80]">(선택)</span>
+                        </label>
+                        <textarea
+                            id="user-note"
+                            rows={2}
+                            maxLength={NOTE_MAX_LENGTH}
+                            value={note}
+                            onChange={(e) => setNote(e.target.value.replace(/\n/g, ' '))}
+                            placeholder="예: 회사에선 웃는데 집에 오면 아무것도 못 하겠어"
+                            className="w-full resize-none rounded-lg border border-[#D6CFC7] bg-[#FDFBF7] px-3 py-2 text-sm font-serif text-[#5C4D41] placeholder:text-[#B0A396] focus:outline-none focus:ring-2 focus:ring-[#8B5E3C]/40"
+                        />
+                        <div className="mt-1 flex justify-between gap-3 text-[11px] font-serif text-[#9C8F80]">
+                            <span>적어 주시면 이 말에 맞춰 처방전을 만들어요. 이 문장은 처방전을 만드는 데에만 쓰이고, 소울 배터리 서버와 기록에는 저장되지 않아요.</span>
+                            <span className="shrink-0">{note.length}/{NOTE_MAX_LENGTH}</span>
+                        </div>
                     </div>
 
                     <button onClick={() => setShowIntro(false)} className="px-10 py-4 bg-[#8B5E3C] text-white font-serif rounded-full hover:bg-[#6D4C32] transition-all shadow-md transform hover:scale-105">
@@ -369,7 +395,11 @@ export default function SurveyScreen() {
                             <h3 className="text-md font-serif font-bold text-[#8B5E3C] mb-1 flex items-center">
                                 <span className="mr-2 text-xl">🌱</span> 2주 충전 루틴
                             </h3>
-                            <p className="text-xs font-serif text-[#9C8F80] mb-4">지금은 누구나 무료로 볼 수 있어요.</p>
+                            <p className="text-xs font-serif text-[#9C8F80] mb-4">
+                                {submittedNote
+                                    ? `"${submittedNote}"라는 지금의 마음에 맞춰 짠 루틴이에요. 지금은 누구나 무료로 볼 수 있어요.`
+                                    : '지금은 누구나 무료로 볼 수 있어요.'}
+                            </p>
                             <div className="space-y-5">
                                 {splitRoutines(routineText).map((block, i) => (
                                     <div key={i} className={block.title ? 'pt-4 border-t border-[#E8E4D9] first:pt-0 first:border-t-0' : ''}>
