@@ -1,24 +1,35 @@
 <!doctype html>
-<html lang="en">
+<html lang="ko">
 <head>
   <meta charset="UTF-8" />
   <link rel="icon" type="image/png" href="/sb-icon.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="AI가 진단하는 당신의 마음 배터리 잔량은? 지금 확인해보세요." />
+  <title>소울 배터리 | 겉 배터리와 속 배터리로 보는 내 마음 에너지</title>
+  <meta name="description" content="30개 문항으로 겉 배터리와 속 배터리를 점검하고, 지금의 나에게 맞춘 마음 리포트와 2주 충전 루틴을 무료로 받아보세요." />
+  <link rel="canonical" href="https://soulbattery.vercel.app/" />
 
   <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="소울 배터리" />
+  <meta property="og:url" content="https://soulbattery.vercel.app/" />
   <meta property="og:title" content="🔋 내 마음 배터리, 사실 방전 상태라고?" />
-  <meta property="og:description" content="AI 심리 분석을 통해 당신의 진짜 마음 상태와 처방전을 받아보세요." />
+  <meta property="og:description" content="겉으로는 괜찮은데 속은 비어 있나요? 겉 배터리와 속 배터리를 점검하고 나에게 맞는 충전 루틴을 받아보세요." />
   <meta property="og:image" content="https://soulbattery.vercel.app/sb-icon.png" />
 
+  <!-- 결제 기능을 붙일 때 결제 스크립트(iamport)를 다시 추가한다 -->
   <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js"></script>
-
-  <script src="https://cdn.iamport.kr/v1/iamport.js"></script>
-
-  <title>Soul Battery</title>
 </head>
 <body>
-<div id="root"></div>
+<div id="root">
+  <!-- 검색엔진용 소개 문구. 앱이 뜨면 이 내용은 화면으로 바뀐다 -->
+  <main style="max-width:640px;margin:40px auto;padding:0 16px;font-family:sans-serif;color:#5C4D41">
+    <h1>소울 배터리 - 내 마음 에너지 점검</h1>
+    <p>겉으로는 하루를 잘 해내고 있는데 속은 비어 있는 느낌이 드나요? 소울 배터리는 30개 문항으로
+      일상을 굴려 가는 힘인 겉 배터리, 실제로 남아 있는 에너지인 속 배터리, 그리고 마음을 드러내는 정도를 따로 점검해요.</p>
+    <p>점검이 끝나면 지금 상태를 읽어 주는 마음 리포트와, 2주 동안 따라 할 수 있는 충전 루틴을 무료로 받을 수 있어요.
+      카카오 로그인을 하면 점검 기록이 쌓여 배터리 변화를 그래프로 볼 수 있어요.</p>
+    <p>소울 배터리는 의료적 진단 서비스가 아니에요. 힘든 마음이 오래 이어진다면 전문 상담을 받아 보세요.</p>
+  </main>
+</div>
 <script type="module" src="/src/main.tsx"></script>
 </body>
 </html>
